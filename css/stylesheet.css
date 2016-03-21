@@ -231,7 +231,9 @@ a:hover {
     font-weight: bold; }
 
 .site-footer-credits {
-    color: #819198; }
+    color: #819198;
+    vertical-align: middle;
+}
 
 @media screen and (min-width: 64em) {
     .site-footer {
@@ -266,4 +268,11 @@ a:hover {
     /* Set the fixed height of the footer here */
     height: 60px;
     background-color: #f5f5f5;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.footer-icon {
+    float: right!important;
+    vertical-align: middle;
 }
