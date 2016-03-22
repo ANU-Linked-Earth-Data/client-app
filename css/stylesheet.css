@@ -206,7 +206,7 @@ a:hover {
 
 @media screen and (min-width: 64em) {
     .main-content {
-        max-width: 64rem;
+        'max-width: 62rem;
         padding: 2rem 6rem;
         margin: 0 auto;
         font-size: 1.1rem; } }
@@ -284,4 +284,16 @@ a:hover {
 
 .search-show-hide.ng-hide {
     opacity:0;
+}
+
+.search-new {
+    padding: 2rem 6rem;
+    margin: 0 auto;
+    max-width: 62rem;
+}
+
+.search-result {
+    'max-width: 124rem;
+    padding: 2rem 6rem;
+    margin: 0 6rem;
 }
