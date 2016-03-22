@@ -1,0 +1,21 @@
+<div >
+    <div class="jumbotron text-center">
+
+        <!-- HTML for SEARCH BAR -->
+        <!-- <h1>Hello {{name}}</h1> -->
+
+        <div id="tfheader">
+            <form id="tfnewsearch" method="get" action="http://www.google.com">
+                <p><input type="text" ng-model="name" ng-change="sc.getMessage()" placeholder="Enter a SPARQL query here" class="form-control"></p>
+            </form>
+
+            <input type="submit" value="Search" class="btn btn-search">
+            <input type="submit" value="Advanced Search" class="btn btn-search">
+
+        </div>
+    </div>
+
+    <div class="jumbotron search-show-hide" ng-show="sc.hasSearched" style="clear:both;">
+        <p>Search Result: {{sc.message}}</p>
+    </div>
+</div>

@@ -10,12 +10,18 @@
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.min.js"></script>
 
     <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
     <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
+
+    <script src="js/app.js"></script>
+    <script src="js/routes.js"></script>
+    <script src="js/controllers/SearchController.js"></script>
+    <script src="js/services/SearchService.js"></script>
 </head>
-<body ng-app="">
+<body ng-app="LEDApp" >
 
 
 <!-- Nav Bar -->
@@ -36,12 +42,13 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
-                <li class="active"><a href="alternate_index.html">Alternative <span class="sr-only">(current)</span></a></li>
+                <li><a href="alternate_index.html">Alternative <span class="sr-only">(current)</span></a></li>
                 <li><a href="default_page.html">Default Page</a></li>
+                <li><a href="html/about.html">About</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="#">Action</a></li>
+                        <li><a href="test.html">Test</a></li>
                         <li><a href="#">Another action</a></li>
                         <li><a href="#">Something else here</a></li>
                         <li role="separator" class="divider"></li>
@@ -61,24 +68,8 @@
     <h2 class="project-tagline"></h2>
 </section>
 
-<section class="main-content">
-
-    <div class="jumbotron text-center">
-
-        <!-- HTML for SEARCH BAR -->
-        <!-- <h1>Hello {{name}}</h1> -->
-
-        <div id="tfheader">
-            <form id="tfnewsearch" method="get" action="http://www.google.com">
-                <p><input type="text" ng-model="name" placeholder="Enter a SPARQL query here" class="form-control"></p>
-            </form>
-
-            <input type="submit" value="Search" class="btn btn-search">
-            <input type="submit" value="Advanced Search" class="btn btn-search">
-
-        </div>
-    </div>
-
+<section class="main-content" ng-controller="rootController">
+    <ng-view></ng-view>
 </section>
 
 <footer class="site-footer">

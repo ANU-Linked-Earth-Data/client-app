@@ -276,3 +276,12 @@ a:hover {
     float: right!important;
     vertical-align: middle;
 }
+
+.search-show-hide {
+    -webkit-transition:all linear 0.5s;
+    transition:all linear 0.5s;
+}
+
+.search-show-hide.ng-hide {
+    opacity:0;
+}
