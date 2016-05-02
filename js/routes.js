@@ -12,8 +12,14 @@ app.config(function($routeProvider){
     ).when("/html/about.html",
         {
             templateUrl: "html/about.html",
-            controller: "AppCtrl",
-            controllerAs: "app"
+            controller: "rootController",
+            controllerAs: "rC"
+        }
+    ).when("/html/map.html",
+        {
+            templateUrl: "html/map.html",
+            controller: "rootController",
+            controllerAs: "rC"
         }
     )
 });
