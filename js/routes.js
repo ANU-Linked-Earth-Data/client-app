@@ -9,7 +9,7 @@ app.config(function($routeProvider){
             controller: "SearchController",
             controllerAs: "sc"
         }
-    ).when("/html/about.html",
+    ).when("/about.html",
         {
             templateUrl: "html/about.html",
             controller: "rootController",
@@ -21,5 +21,15 @@ app.config(function($routeProvider){
             controller: "rootController",
             controllerAs: "rC"
         }
-    )
+    ).when("/map.html",
+        {
+            templateUrl: "html/map.html",
+            controller: "GoogleMapController",
+            controllerAs: "gmc"
+        }
+    ).otherwise({
+        redirectTo: '/html/search.html',
+        controller: "SearchController",
+        controllerAs: "sc"
+    });
 });
