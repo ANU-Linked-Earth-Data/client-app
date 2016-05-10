@@ -2,7 +2,7 @@
  * Created by Duo on 22-Mar-16.
  */
 
-var app = angular.module('LEDApp', ['ngRoute','uiGmapgoogle-maps'])
+var app = angular.module('LEDApp', ['ngRoute','uiGmapgoogle-maps','ngMaterial', 'ngMessages', 'rzModule'])
     .config(function(uiGmapGoogleMapApiProvider) {
         uiGmapGoogleMapApiProvider.configure({
             key: 'AIzaSyDtKR_08r8JNQdxjLflpWqS3kSDF3fBBp8',

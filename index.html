@@ -7,12 +7,20 @@
 
     <title>Anu-linked-earth-data.GitHub.io by ANU-Linked-Earth-Data</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
 
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+
+    <!-- jQuery 1.11.3 (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+    <!-- AngularJS 1.4.8-->
     <script src="js/lodash.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.min.js"></script>
+
+    <!-- Bootstrap v3.3.6 -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/bootstrap.min.js"></script>
 
     <script src="js/angular-simple-logger.js"></script>
     <script src="js/angular-google-maps.min.js"></script>
@@ -20,16 +28,39 @@
     <link rel="stylesheet" type="text/css" href="css/github-light.css" media="screen">
     <link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="css/normalize.css" media="screen">
+
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
+
+    <!-- Leaflet 0.7.7 -->
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+
+    <!-- rzslider 2.13.0 -->
+    <script src="js/lib/rzslider.js"></script>
+    <link rel="stylesheet" href="css/rzslider.min.css">
+
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
+
+    <!-- Material for angular 1.1.0 -->
+    <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
+
+    <!-- http://www.daterangepicker.com/ -->
+    <script type="text/javascript" src="js/lib/moment.min.js"></script>
 
     <script src="js/app.js"></script>
     <script src="js/routes.js"></script>
     <script src="js/controllers/GoogleMapController.js"></script>
     <script src="js/controllers/SearchController.js"></script>
     <script src="js/services/SearchService.js"></script>
-    <!-- <script src="js/lib/rdflib/rdflib-node.js"></script>
+
+    <!-- RDF
+    <script src="js/lib/rdflib/rdflib-node.js"></script>
     <script src="js/lib/rdflib/rdflib.js"></script> -->
-    <script src="js/lib/rdfstore/rdfstore_min.js"></script>
+
+    <!-- RDFstore
+     <script src="js/lib/rdfstore/rdfstore_min.js"></script> -->
 
 </head>
 <body ng-app="LEDApp" >
@@ -47,17 +78,17 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#/">Brand</a>
+            <a class="navbar-brand" href="#/">LEO</a>
         </div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
-                <li><a href="alternate_index.html">Alternative <span class="sr-only">(current)</span></a></li>
-                <li><a href="default_page.html">Default Page</a></li>
-                <li><a href="#/map.html">Map</a></li>
+                <!-- <li><a href="alternate_index.html">Alternative <span class="sr-only">(current)</span></a></li> -->
+                <!-- <li><a href="default_page.html">Default Page</a></li> -->
+                <!-- <li><a href="#/map.html">Map</a></li> -->
                 <li><a href="#/about.html">About</a></li>
-                <li class="dropdown">
+                <!-- <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li><a href="test.html">Test</a></li>
@@ -66,40 +97,18 @@
                         <li role="separator" class="divider"></li>
                         <li><a href="#">Separated link</a></li>
                         <li role="separator" class="divider"></li>
-                        <li><a href="#">One more separated link</a></li>-->
+                        <li><a href="#">One more separated link</a></li>
                     </ul>
-                </li>
+                </li> -->
             </ul>
 
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
 </nav>
 
-<section class="page-header">
-    <h1 class="project-name">ANU Linked Earth Data</h1>
-    <h2 class="project-tagline"></h2>
-</section>
-
 <section class="main-content" ng-controller="rootController">
     <ng-view></ng-view>
 </section>
-
-<footer class="">
-    <div class="container">
-        <span class="site-footer-credits">
-        This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.
-        </span>
-        <a href="https://github.com/ANU-Linked-Earth-Data" class="footer-icon">
-            <img src="assets/images/GitHub-Mark/PNG/GitHub-Mark-32px.png" alt="Fork us on Github!">
-        </a>
-    </div>
-</footer>
-
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-<!-- Include all compiled plugins (below), or include individual files as needed -->
-<script src="js/bootstrap.min.js"></script>
-<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
 
 </body>
 </html>
