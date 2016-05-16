@@ -1,18 +1,19 @@
-<section class="page-header">
-    <h1 class="project-name">ANU Linked Earth Data</h1>
-    <h2 class="project-tagline"></h2>
-</section>
+<nav class="navbar navbar-default navbar-static-top ">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#/">ANU Linked Earth Observations</a>
+        </div>
+        <form class="navbar-form navbar-right">
+            <div class="form-group">
+                <input type="text" ng-model="name" ng-change="sc.getMessage()" placeholder="Enter a SPARQL query here" class="form-control">
+            </div>
+            <input type="submit" value="Search" class="btn btn-default" ng-click="search()">
+        </form>
+    </div><!-- /.container-fluid -->
+</nav>
 
-<div ng-class="{'search-result': sc.hasSearched, 'search-new': !sc.hasSearched}" ng-cloak>
-    <div class="jumbotron text-center">
-
-        <!-- HTML for SEARCH BAR -->
-        <!-- <h1>Hello {{name}}</h1>-->
-
-        <div id="tfheader">
-            <form id="tfnewsearch" method="get" action="http://www.google.com">
-                <p><input type="text" ng-model="name" ng-change="sc.getMessage()" placeholder="Enter a SPARQL query here" class="form-control"></p>
-            </form>
+<div ng-class="{'search-result': sc.hasSearched, 'search-new': !sc.hasSearched}" ng-cloak="ng-cloak">
 
             <md-content>
                 <!-- Start Date: <md-datepicker ng-model="startDate" md-placeholder="Enter date"></md-datepicker> -->
@@ -21,14 +22,9 @@
 
             <!-- <li ng-repeat="band in getBands()">
                 <label>Band {{band.name}}:
-                    <input type="checkbox" ng-model="checkboxModel.band.name">
+                <input type="checkbox" ng-model="checkboxModel.band.name">
                 </label>
-            </li> -->
-
-            <input type="submit" value="Search" class="btn btn-search" ng-click="search()">
-            <input type="submit" value="Advanced Search" class="btn btn-search">
-        </div>
-    </div>
+                </li> -->
 
     <div class="jumbotron search-show-hide" ng-show="sc.hasSearched" style="clear:both;">
         <p>Search Result: {{sc.message}}</p>
