@@ -14,13 +14,14 @@ app.controller('SearchController', function(SearchService, $scope){
     self.currentOverlay = [];
 
     prefixes.push('PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>');
+    prefixes.push('PREFIX led: <http://www.example.org/ANU-LED#>');
 
     where_clauses.push('?subject a <http://purl.org/linked-data/cube#Observation>');
     where_clauses.push('. ?subject <http://www.example.org/ANU-LED#imageData> ?image');
     where_clauses.push('. ?subject <http://www.example.org/ANU-LED#etmBand> ?band');
-    where_clauses.push('. ?subject <http://www.opengis.net/ont/geosparql#asWKT> ?geoSparql');
-    where_clauses.push('. ?subject <http://purl.org/linked-data/sdmx/2009/dimension#timePeriod> ?timePeriod');
-    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#pixelHeight> 64');
+    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#bounds> ?geoSparql');
+    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#time> ?timePeriod');
+    //where_clauses.push('. ?subject <http://www.example.org/ANU-LED#pixelHeight> 64');
 
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
@@ -62,13 +63,13 @@ app.controller('SearchController', function(SearchService, $scope){
     function getBoundingCorners(polygonText){
         var corners = polygonText.match(/-?\d+.?\d* -?\d+.?\d*,/g);
 
-        return [corners[0].match(/-?\d+.?\d*/g), corners[2].match(/-?\d+.?\d*/g)]
+        return [corners[0].match(/-?\d+.?\d*/g).reverse(), corners[2].match(/-?\d+.?\d*/g).reverse()]
     }
 
     //Slider config with steps as the distinct datestamps of the observations
     SearchService.getDistinctTime().then(function (options) {
         self.dict = {};
-        self.display = []
+        self.display = [];
 
         for (i in options){
             self.dict[(moment(options[i]).format("DD/MM/YY, h:mm:ss a"))] = options[i];
@@ -93,7 +94,7 @@ app.controller('SearchController', function(SearchService, $scope){
                 onEnd: function () {
                     //TODO: Only update if end date is different
                     if (timePeriod != self.dict[$scope.slider_date.value]) {
-                        timePeriod = self.dict[$scope.slider_date.value]
+                        timePeriod = self.dict[$scope.slider_date.value];
                         self.performQuery();
                     }
                 }
@@ -119,6 +120,8 @@ app.controller('SearchController', function(SearchService, $scope){
 
         query += '. Filter(?timePeriod = \"' + timePeriod + '\"^^xsd:dateTime)}';
         query += closing;
+
+        // console.log("Query: " + query);
         
         var encoded = encodeURIComponent(query);
 
