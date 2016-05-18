@@ -6,7 +6,7 @@ app.controller('SearchController', function(SearchService, $scope){
     var self = this;
     this.hasSearched = false;
     var prefixes = [];
-    var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?image';
+    var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?image ?resolution';
     var where_clauses = [];
     var timePeriod;
     var closing = 'ORDER BY DESC(?timePeriod) LIMIT 25';
@@ -23,6 +23,7 @@ app.controller('SearchController', function(SearchService, $scope){
     where_clauses.push('. ?subject <http://www.example.org/ANU-LED#etmBand> ?band');
     where_clauses.push('. ?subject <http://www.example.org/ANU-LED#bounds> ?geoSparql');
     where_clauses.push('. ?subject <http://www.example.org/ANU-LED#time> ?timePeriod');
+    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#resolution> ?resolution');
     //where_clauses.push('. ?subject <http://www.example.org/ANU-LED#pixelHeight> 64');
 
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
@@ -33,17 +34,6 @@ app.controller('SearchController', function(SearchService, $scope){
         id: 'duo.034p8op4',
         accessToken: 'pk.eyJ1IjoiZHVvIiwiYSI6ImNpbm52Y2lxdzB6emZ0dmx5MmNmNGZnejMifQ._yO4cALvQUPwvtVj_nUYEA'
     }).addTo(mymap);
-
-    // Custom on hover info
-    var timeSlider = L.control();
-
-    timeSlider.onAdd = function (map) {
-        var div = L.DomUtil.create('div', 'legend'); // create a div with a class "info"
-        div.innerHTML = '<p>Test</p><rzslider rz-slider-model="slider_date.value" rz-slider-options="slider_date.options"></rzslider>';
-        return div;
-    };
-
-    timeSlider.addTo(mymap);
 
     // Custom on hover info
     var info = L.control();
@@ -58,7 +48,14 @@ app.controller('SearchController', function(SearchService, $scope){
     info.update = function (props) {
         if (props != null) {
             var subject = props.subject.value;
-            this._div.innerHTML = '<h4>Image Details</h4>' + '<a href="' + subject + '">Link</a>';
+            var coords = getBoundingCorners(String(props.geoSparql.value));
+            this._div.innerHTML = '<h4>Image Details</h4>';
+            this._div.innerHTML += '<a href="' + subject + '">Link</a>';
+            this._div.innerHTML += '<p>Band:' + props.band.value +'</p>';
+            this._div.innerHTML += '<p>Resolution:' + props.resolution.value +'</p>';
+            this._div.innerHTML += '<p>Location:' + coords[0] +'</p>';
+        } else {
+            this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
         }
     };
 
