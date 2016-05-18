@@ -7,7 +7,7 @@ app.factory('SearchService', function($http){
     var localhost = 'http://localhost:3030/landsat/query?query=';
     var remotehost = 'http://144.6.231.77/landsat/query?query=';
 
-    var server = localhost;
+    var server = remotehost;
 
     var getAll = server + 'PREFIX+geo%3A+%3Chttp%3A%2F%2Fwww.w3.org%2F2003%2F01%2Fgeo%2Fwgs84_pos%23%3E%0APREFIX+geosparql%3A+%3Chttp%3A%2F%2Fwww.opengis.net%2Font%2Fgeosparql%23%3E%0APREFIX+geos%3A+%3Chttp%3A%2F%2Fwww.telegraphis.net%2Fontology%2Fgeography%2Fgeography%23%3E%0APREFIX+geosp%3A+%3Chttp%3A%2F%2Frdf.geospecies.org%2Font%2Fgeospecies%23%3E%0A%0ASELECT+%3Fsubject+%3FgeoSparql+%3FtimePeriod+%3Fimage%0AWHERE+%7B%0A++%3Fsubject+a+%3Chttp%3A%2F%2Fpurl.org%2Flinked-data%2Fcube%23Observation%3E%0A++++.+%3Fsubject+%3Chttp%3A%2F%2Fwww.example.org%2FANU-LED%23imageData%3E+%3Fimage%0A++++.+%3Fsubject+%3Chttp%3A%2F%2Fwww.opengis.net%2Font%2Fgeosparql%23asWKT%3E+%3FgeoSparql%0A++++.+%3Fsubject+%3Chttp%3A%2F%2Fpurl.org%2Flinked-data%2Fsdmx%2F2009%2Fdimension%23timePeriod%3E+%3FtimePeriod%0A%7D%0ALIMIT+25';
     var getFirstTimeStamp = server + 'SELECT+%3Fsubject+%3FtimePeriod+%0AWHERE+%7B%0A++%3Fsubject+a+%3Chttp%3A%2F%2Fpurl.org%2Flinked-data%2Fcube%23Observation%3E%0A++++.+%3Fsubject+%3Chttp%3A%2F%2Fpurl.org%2Flinked-data%2Fsdmx%2F2009%2Fdimension%23timePeriod%3E+%3FtimePeriod%0A%7D%0AORDER+BY+DESC(%3FtimePeriod)%0ALIMIT+1';

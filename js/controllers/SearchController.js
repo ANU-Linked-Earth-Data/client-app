@@ -13,6 +13,8 @@ app.controller('SearchController', function(SearchService, $scope){
 
     self.currentOverlay = [];
 
+    $scope.selectGeolocation = null;
+
     prefixes.push('PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>');
     prefixes.push('PREFIX led: <http://www.example.org/ANU-LED#>');
 
@@ -32,8 +34,44 @@ app.controller('SearchController', function(SearchService, $scope){
         accessToken: 'pk.eyJ1IjoiZHVvIiwiYSI6ImNpbm52Y2lxdzB6emZ0dmx5MmNmNGZnejMifQ._yO4cALvQUPwvtVj_nUYEA'
     }).addTo(mymap);
 
+    // Custom on hover info
+    var timeSlider = L.control();
+
+    timeSlider.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'legend'); // create a div with a class "info"
+        div.innerHTML = '<p>Test</p><rzslider rz-slider-model="slider_date.value" rz-slider-options="slider_date.options"></rzslider>';
+        return div;
+    };
+
+    timeSlider.addTo(mymap);
+
+    // Custom on hover info
+    var info = L.control();
+
+    info.onAdd = function (map) {
+        this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+        this.update();
+        return this._div;
+    };
+
+    // method that we will use to update the control based on feature properties passed
+    info.update = function (props) {
+        if (props != null) {
+            var subject = props.subject.value;
+            this._div.innerHTML = '<h4>Image Details</h4>' + '<a href="' + subject + '">Link</a>';
+        }
+    };
+
+    info.addTo(mymap);
+
     $scope.search = function(){
         console.log("On Click Search");
+        if($scope.selectGeolocation != null) {
+            prefixes.push('PREFIX spatial: <http://jena.apache.org/spatial#>');
+            where_clauses.push('. ?subject ' + $scope.selectGeolocation + ' (' + $scope.geospatialQuery + ")");
+
+            self.performQuery();
+        }
     };
 
     self.getMessage = function() {
@@ -68,11 +106,12 @@ app.controller('SearchController', function(SearchService, $scope){
 
     //Slider config with steps as the distinct datestamps of the observations
     SearchService.getDistinctTime().then(function (options) {
-        self.dict = {};
+        self.dict = [];
         self.display = [];
 
         for (i in options){
             self.dict[(moment(options[i]).format("DD/MM/YY, h:mm:ss a"))] = options[i];
+            console.log(self.dict);
             self.display.push(moment(options[i]).format("DD/MM/YY, h:mm:ss a"));
             timePeriod = options[i];
         }
@@ -81,10 +120,11 @@ app.controller('SearchController', function(SearchService, $scope){
 
         //Slider config with callbacks
         $scope.slider_date = {
-            value: 0,
+            value: self.display.length-1,
+            showTicks: true,
             options: {
                 stepsArray: self.display,
-                //stepsArray: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+                //stepsArray: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
                 onStart: function () {
 
                 },
@@ -93,13 +133,17 @@ app.controller('SearchController', function(SearchService, $scope){
                 },
                 onEnd: function () {
                     //TODO: Only update if end date is different
+                    console.log($scope.slider_date.value);
                     if (timePeriod != self.dict[$scope.slider_date.value]) {
-                        timePeriod = self.dict[$scope.slider_date.value];
+                        console.log($scope.slider_date.value);
+                        timePeriod = self.dict[self.display[$scope.slider_date.value]];
                         self.performQuery();
                     }
                 }
             }
         };
+
+        //$scope.$broadcast('rzSliderForceRender');
     });
 
     self.performQuery = function(){
@@ -121,32 +165,41 @@ app.controller('SearchController', function(SearchService, $scope){
         query += '. Filter(?timePeriod = \"' + timePeriod + '\"^^xsd:dateTime)}';
         query += closing;
 
-        // console.log("Query: " + query);
+        console.log("Query: " + query);
         
         var encoded = encodeURIComponent(query);
 
         SearchService.getAll(encoded).then(function (data) {
-            //Clear current overlay
+
+            // Read new observations
+            var observations = data.results.bindings;
+            var imageDict = [];
+
+            // Clear current overlay
             for (i in self.currentOverlay){
                 mymap.removeLayer(self.currentOverlay[i]);
             }
 
             self.currentOverlay = [];
 
-            // Read new observations
-            var observations = data.results.bindings;
-
+            // Add new overlay
             for (i in observations){
-                var coords = getBoundingCorners(String(observations[i].geoSparql.value));
+                imageDict[observations[i].image.value] = observations[i];
 
+                var coords = getBoundingCorners(String(observations[i].geoSparql.value));
                 var overlay = new L.imageOverlay(observations[i].image.value, coords).addTo(mymap).setOpacity(1);
+                
                 L.DomEvent.on(overlay._image, 'click', function(e){
-                    console.log(e);
+                    // console.log(e.srcElement.currentSrc);
+                    // console.log(imageDict[e.srcElement.currentSrc].subject.value);
+                    info.update(imageDict[e.srcElement.currentSrc]);
                 });
 
                 self.currentOverlay.push(overlay);
                 mymap.panTo(coords[0]);
             }
+
+            var currentLayerGroup = L.layerGroup(self.currentOverlay);
         });
     };
 });
