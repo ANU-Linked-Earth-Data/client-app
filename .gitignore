@@ -1,4 +1,11 @@
+# Editor cruft
 idea/
 .idea/
-nodejs/
 *.swp
+
+# Build cruft
+node_modules/
+app/bower_components/
+
+# Miscellanea
+nodejs/

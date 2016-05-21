@@ -1,0 +1,17 @@
+{
+  "name": "anu-led-client-app",
+  "description": "Client application for ANU Linked Earth Data project",
+  "license": "MIT",
+  "homepage": "https://anu-linked-earth-data.github.io/",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "angular": "~1.5.5",
+    "angular-route": "~1.5.5",
+    "angular-loader": "~1.5.5",
+    "angular-mocks": "~1.5.5"
+  },
+  "resolutions": {
+    "angular": "~1.5.5"
+  }
+}
