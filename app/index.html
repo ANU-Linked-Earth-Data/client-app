@@ -6,50 +6,36 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>ANU Linked Earth Data Project</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="bower_components/jquery/dist/jquery.js"></script>
 
-        <!-- jQuery 1.11.3 (necessary for Bootstrap's JavaScript plugins) -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.js"></script>
+        <!-- Angular 1.X -->
+        <script src="bower_components/angular/angular.js"></script>
+        <script src="bower_components/angular-route/angular-route.js"></script>
+        <script src="bower_components/angular-messages/angular-messages.js"></script>
 
-        <!-- AngularJS 1.4.8-->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.8.2/lodash.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.js"></script>
+        <!-- Bootstrap for style -->
+        <link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+        <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
 
-        <!-- Google Maps for Angular -->
-        <script src="lib/angular-simple-logger.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-google-maps/2.3.2/angular-google-maps.js"></script>
+        <!-- Leaflet for maps -->
+        <link href="bower_components/leaflet/dist/leaflet.css" rel="stylesheet">
+        <script src="bower_components/leaflet/dist/leaflet.js"></script>
 
-        <!-- Bootstrap v3.3.6 -->
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.js"></script>
+        <!-- Slider widget for picking dates (and possibly other things) -->
+        <script src="bower_components/angularjs-slider/dist/rzslider.js"></script>
+        <link href="bower_components/angularjs-slider/dist/rzslider.css" rel="stylesheet">
 
-        <!-- Misc. styles -->
-        <link rel="stylesheet" type="text/css" href="app.css" media="screen">
+        <!-- Moment for time manipulation -->
+        <script src="bower_components/moment/moment.js"></script>
 
-        <!-- Leaflet 0.7.7 -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js"></script>
+        <!-- Our styles -->
+        <link href="app.css" rel="stylesheet">
 
-        <!-- rzslider 2.13.0 -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/angularjs-slider/2.13.0/rzslider.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angularjs-slider/2.13.0/rzslider.min.css">
-
-        <!-- Material for angular 1.1.0 -->
-        <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.js"></script>
-        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
-
-        <!-- https://www.daterangepicker.com/ -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.js"></script>
-
+        <!-- Our Javascript -->
         <script src="app.js"></script>
         <script src="routes.js"></script>
-        <script src="controllers/GoogleMapController.js"></script>
         <script src="controllers/SearchController.js"></script>
         <script src="services/SearchService.js"></script>
 
