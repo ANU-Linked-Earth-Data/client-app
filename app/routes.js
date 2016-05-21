@@ -5,19 +5,13 @@
 app.config(function($routeProvider){
     $routeProvider.when("/",
         {
-            templateUrl: "html/search.html",
+            templateUrl: "search.html",
             controller: "SearchController",
             controllerAs: "sc"
         }
-    ).when("/about.html",
-        {
-            templateUrl: "html/about.html",
-            controller: "rootController",
-            controllerAs: "rC"
-        }
     ).when("/html/map.html",
         {
-            templateUrl: "html/map.html",
+            templateUrl: "map.html",
             controller: "rootController",
             controllerAs: "rC"
         }
