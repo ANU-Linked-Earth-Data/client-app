@@ -9,8 +9,8 @@ angular.module('LEDApp')
     var self = this;
     this.hasSearched = false;
     var prefixes = [];
-    var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?image ?resolution';
     var whereClauses = [];
+    var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?image ?resolution ?lon ?lat';
     var timePeriod;
     var closing = 'ORDER BY DESC(?timePeriod) LIMIT 25';
 
@@ -20,6 +20,7 @@ angular.module('LEDApp')
 
     prefixes.push('PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>');
     prefixes.push('PREFIX led: <http://www.example.org/ANU-LED#>');
+    prefixes.push('PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>');
 
     whereClauses.push('?subject a <http://purl.org/linked-data/cube#Observation>');
     whereClauses.push('. ?subject <http://www.example.org/ANU-LED#imageData> ?image');
@@ -27,6 +28,9 @@ angular.module('LEDApp')
     whereClauses.push('. ?subject <http://www.example.org/ANU-LED#bounds> ?geoSparql');
     whereClauses.push('. ?subject <http://www.example.org/ANU-LED#time> ?timePeriod');
     whereClauses.push('. ?subject <http://www.example.org/ANU-LED#resolution> ?resolution');
+    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#location> ?location');
+    whereClauses.push('. ?location <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat');
+    whereClauses.push('. ?location <http://www.w3.org/2003/01/geo/wgs84_pos#lon> ?lon');
 
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
@@ -50,12 +54,14 @@ angular.module('LEDApp')
     info.update = function (props) {
         if (props !== undefined) {
             var subject = props.subject.value;
-            var coords = getBoundingCorners(String(props.geoSparql.value));
+            var lat = Number(props.lat.value);
+            var lon = Number(props.lon.value);
+
             this._div.innerHTML = '<h4>Image Details</h4>';
             this._div.innerHTML += '<a href="' + subject + '">Link</a>';
             this._div.innerHTML += '<p>Band:' + props.band.value +'</p>';
             this._div.innerHTML += '<p>Resolution:' + props.resolution.value +'</p>';
-            this._div.innerHTML += '<p>Location:' + coords[0] +'</p>';
+            this._div.innerHTML += '<p>Location: (' + (Math.round((lat + 0.00001) * 100) / 100) + ', ' + (Math.round((lon + 0.00001) * 100) / 100) + '(</p>';
         } else {
             this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
         }
@@ -168,7 +174,7 @@ angular.module('LEDApp')
 
             // Add new overlay
             var updateFunction = function(e) {
-                info.update(imageDict[e.srcElement.currentSrc]);
+                info.update(imageDict[e.target.src]);
             };
 
             for (i in observations){
@@ -176,7 +182,7 @@ angular.module('LEDApp')
 
                 var coords = getBoundingCorners(String(observations[i].geoSparql.value));
                 var overlay = new L.imageOverlay(observations[i].image.value, coords).addTo(mymap).setOpacity(1);
-                
+
                 L.DomEvent.on(overlay._image, 'click', updateFunction);
 
                 self.currentOverlay.push(overlay);
