@@ -436,7 +436,7 @@ module.exports = function (grunt) {
       pages: {
         options: {
           remote: 'git@github.com:ANU-Linked-Earth-Data/anu-linked-earth-data.github.io',
-          branch: 'gh-pages'
+          branch: 'master'
         }
       },
       local: {
