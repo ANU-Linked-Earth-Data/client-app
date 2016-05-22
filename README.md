@@ -15,3 +15,10 @@ distribution. Project structure was generated with [Yeoman](http://yeoman.io/),
 so you should check out the readme for
 [`generator-angular`](https://github.com/yeoman/generator-angular) if you want
 to take advantage of that.
+
+To deploy to Github Pages, try this:
+
+```
+$ grunt build               # Build in dist/
+$ grunt buildcontrol:pages  # Push to Github gh-pages branch
+```
