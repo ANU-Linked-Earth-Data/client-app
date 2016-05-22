@@ -1,5 +1,7 @@
 # anu-linked-earth-data.github.io
 
+[![Build Status](https://travis-ci.org/ANU-Linked-Earth-Data/client-app.svg?branch=master)](https://travis-ci.org/ANU-Linked-Earth-Data/client-app)
+
 This is the client application. Currently it's using a AngularJS and Bootstrap
 to display information from Sam's Nectar server. To run the app, use
 
