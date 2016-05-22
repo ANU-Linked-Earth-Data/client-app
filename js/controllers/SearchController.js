@@ -6,7 +6,7 @@ app.controller('SearchController', function(SearchService, $scope){
     var self = this;
     this.hasSearched = false;
     var prefixes = [];
-    var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?image ?resolution';
+    var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?image ?resolution ?lon ?lat';
     var where_clauses = [];
     var timePeriod;
     var closing = 'ORDER BY DESC(?timePeriod) LIMIT 25';
@@ -17,6 +17,7 @@ app.controller('SearchController', function(SearchService, $scope){
 
     prefixes.push('PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>');
     prefixes.push('PREFIX led: <http://www.example.org/ANU-LED#>');
+    prefixes.push('PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>');
 
     where_clauses.push('?subject a <http://purl.org/linked-data/cube#Observation>');
     where_clauses.push('. ?subject <http://www.example.org/ANU-LED#imageData> ?image');
@@ -24,6 +25,9 @@ app.controller('SearchController', function(SearchService, $scope){
     where_clauses.push('. ?subject <http://www.example.org/ANU-LED#bounds> ?geoSparql');
     where_clauses.push('. ?subject <http://www.example.org/ANU-LED#time> ?timePeriod');
     where_clauses.push('. ?subject <http://www.example.org/ANU-LED#resolution> ?resolution');
+    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#location> ?location');
+    where_clauses.push('. ?location <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat');
+    where_clauses.push('. ?location <http://www.w3.org/2003/01/geo/wgs84_pos#lon> ?lon');
     //where_clauses.push('. ?subject <http://www.example.org/ANU-LED#pixelHeight> 64');
 
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
@@ -48,12 +52,14 @@ app.controller('SearchController', function(SearchService, $scope){
     info.update = function (props) {
         if (props != null) {
             var subject = props.subject.value;
-            var coords = getBoundingCorners(String(props.geoSparql.value));
+            var lat = Number(props.lat.value);
+            var lon = Number(props.lon.value);
+
             this._div.innerHTML = '<h4>Image Details</h4>';
             this._div.innerHTML += '<a href="' + subject + '">Link</a>';
             this._div.innerHTML += '<p>Band:' + props.band.value +'</p>';
             this._div.innerHTML += '<p>Resolution:' + props.resolution.value +'</p>';
-            this._div.innerHTML += '<p>Location:' + coords[0] +'</p>';
+            this._div.innerHTML += '<p>Location: (' + (Math.round((lat + 0.00001) * 100) / 100) + ', ' + (Math.round((lon + 0.00001) * 100) / 100) + '(</p>';
         } else {
             this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
         }
@@ -189,7 +195,7 @@ app.controller('SearchController', function(SearchService, $scope){
                 L.DomEvent.on(overlay._image, 'click', function(e){
                     // console.log(e.srcElement.currentSrc);
                     // console.log(imageDict[e.srcElement.currentSrc].subject.value);
-                    info.update(imageDict[e.srcElement.currentSrc]);
+                    info.update(imageDict[e.target.src]);
                 });
 
                 self.currentOverlay.push(overlay);
