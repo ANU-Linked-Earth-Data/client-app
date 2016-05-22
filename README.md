@@ -4,10 +4,14 @@ This is the client application. Currently it's using a AngularJS and Bootstrap
 to display information from Sam's Nectar server. To run the app, use
 
 ```
-$ npm install
-$ npm start
-$ xdg-open http://localhost:8000/app/
+$ npm install     # Development dependencies
+$ export PATH="$(npm bin):$PATH"
+$ bower install   # Client-side dependencies
+$ grunt serve     # Run the dev server
 ```
 
-Project structure is the same used as that used by
-[`angular-seed`](https://github.com/angular/angular-seed).
+`grunt test` will run tests and `grunt build` will produce a minified copy for
+distribution. Project structure was generated with [Yeoman](http://yeoman.io/),
+so you should check out the readme for
+[`generator-angular`](https://github.com/yeoman/generator-angular) if you want
+to take advantage of that.

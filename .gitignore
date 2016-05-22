@@ -4,8 +4,11 @@ idea/
 *.swp
 
 # Build cruft
-node_modules/
-app/bower_components/
+/node_modules/
+/bower_components/
+/dist
+/.tmp
+/.sass-cache
 
 # Miscellanea
 nodejs/

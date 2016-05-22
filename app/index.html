@@ -31,17 +31,16 @@
         <script src="bower_components/moment/moment.js"></script>
 
         <!-- Our styles -->
-        <link href="app.css" rel="stylesheet">
+        <link href="styles/main.css" rel="stylesheet">
 
         <!-- Our Javascript -->
-        <script src="app.js"></script>
-        <script src="routes.js"></script>
-        <script src="controllers/SearchController.js"></script>
-        <script src="services/SearchService.js"></script>
+        <script src="scripts/app.js"></script>
+        <script src="scripts/controllers/SearchController.js"></script>
+        <script src="scripts/services/SearchService.js"></script>
 
     </head>
     <body ng-app="LEDApp" >
-        <section class="main-content" ng-controller="rootController">
+        <section class="main-content">
             <ng-view></ng-view>
         </section>
     </body>

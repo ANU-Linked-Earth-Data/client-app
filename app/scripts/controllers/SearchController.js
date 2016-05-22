@@ -1,13 +1,16 @@
+'use strict';
+
 /**
  * Created by Duo on 22-Mar-16.
  */
 
-app.controller('SearchController', function(SearchService, $scope){
+angular.module('LEDApp')
+        .controller('SearchController', function(SearchService, $scope){
     var self = this;
     this.hasSearched = false;
     var prefixes = [];
     var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?image ?resolution';
-    var where_clauses = [];
+    var whereClauses = [];
     var timePeriod;
     var closing = 'ORDER BY DESC(?timePeriod) LIMIT 25';
 
@@ -18,13 +21,12 @@ app.controller('SearchController', function(SearchService, $scope){
     prefixes.push('PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>');
     prefixes.push('PREFIX led: <http://www.example.org/ANU-LED#>');
 
-    where_clauses.push('?subject a <http://purl.org/linked-data/cube#Observation>');
-    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#imageData> ?image');
-    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#etmBand> ?band');
-    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#bounds> ?geoSparql');
-    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#time> ?timePeriod');
-    where_clauses.push('. ?subject <http://www.example.org/ANU-LED#resolution> ?resolution');
-    //where_clauses.push('. ?subject <http://www.example.org/ANU-LED#pixelHeight> 64');
+    whereClauses.push('?subject a <http://purl.org/linked-data/cube#Observation>');
+    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#imageData> ?image');
+    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#etmBand> ?band');
+    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#bounds> ?geoSparql');
+    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#time> ?timePeriod');
+    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#resolution> ?resolution');
 
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
@@ -38,7 +40,7 @@ app.controller('SearchController', function(SearchService, $scope){
     // Custom on hover info
     var info = L.control();
 
-    info.onAdd = function (map) {
+    info.onAdd = function () {
         this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
         this.update();
         return this._div;
@@ -46,7 +48,7 @@ app.controller('SearchController', function(SearchService, $scope){
 
     // method that we will use to update the control based on feature properties passed
     info.update = function (props) {
-        if (props != null) {
+        if (props !== undefined) {
             var subject = props.subject.value;
             var coords = getBoundingCorners(String(props.geoSparql.value));
             this._div.innerHTML = '<h4>Image Details</h4>';
@@ -63,33 +65,15 @@ app.controller('SearchController', function(SearchService, $scope){
 
     $scope.search = function(){
         console.log("On Click Search");
-        if($scope.selectGeolocation != null) {
+        if($scope.selectGeolocation !== null) {
             prefixes.push('PREFIX spatial: <http://jena.apache.org/spatial#>');
-            where_clauses.push('. ?subject ' + $scope.selectGeolocation + ' (' + $scope.geospatialQuery + ")");
+            whereClauses.push('. ?subject ' + $scope.selectGeolocation + ' (' + $scope.geospatialQuery + ")");
 
             self.performQuery();
         }
     };
 
     self.getMessage = function() {
-        /* example for rdflib
-
-        var RDF = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-        var RDFS = Namespace("http://www.w3.org/2000/01/rdf-schema#")
-        var FOAF = Namespace("http://xmlns.com/foaf/0.1/")
-        var XSD = Namespace("http://www.w3.org/2001/XMLSchema#")
-
-        var store = $rdf.graph();
-        var timeout = 5000; // 5000 ms timeout
-        var fetcher = new $rdf.Fetcher(store, timeout);
-
-        fetcher.nowOrWhenFetched(url, function(ok, body, xhr) {
-            if (!ok) {
-                console.log("Oops, something happened and couldn't fetch data");
-            } else {
-                // do something with the data in the store (see below)
-            }
-        })*/
     };
 
     /*  Get the top left and bottom right corners of polygon definition:
@@ -98,7 +82,10 @@ app.controller('SearchController', function(SearchService, $scope){
     function getBoundingCorners(polygonText){
         var corners = polygonText.match(/-?\d+.?\d* -?\d+.?\d*,/g);
 
-        return [corners[0].match(/-?\d+.?\d*/g).reverse(), corners[2].match(/-?\d+.?\d*/g).reverse()]
+        return [
+            corners[0].match(/-?\d+.?\d*/g).reverse(),
+            corners[2].match(/-?\d+.?\d*/g).reverse()
+        ];
     }
 
     //Slider config with steps as the distinct datestamps of the observations
@@ -106,7 +93,7 @@ app.controller('SearchController', function(SearchService, $scope){
         self.dict = [];
         self.display = [];
 
-        for (i in options){
+        for (var i in options){
             self.dict[(moment(options[i]).format("DD/MM/YY, h:mm:ss a"))] = options[i];
             console.log(self.dict);
             self.display.push(moment(options[i]).format("DD/MM/YY, h:mm:ss a"));
@@ -116,7 +103,7 @@ app.controller('SearchController', function(SearchService, $scope){
         self.performQuery();
 
         //Slider config with callbacks
-        $scope.slider_date = {
+        $scope.sliderDate = {
             value: self.display.length-1,
             showTicks: true,
             options: {
@@ -130,10 +117,10 @@ app.controller('SearchController', function(SearchService, $scope){
                 },
                 onEnd: function () {
                     //TODO: Only update if end date is different
-                    console.log($scope.slider_date.value);
-                    if (timePeriod != self.dict[$scope.slider_date.value]) {
-                        console.log($scope.slider_date.value);
-                        timePeriod = self.dict[self.display[$scope.slider_date.value]];
+                    console.log($scope.sliderDate.value);
+                    if (timePeriod !== self.dict[$scope.sliderDate.value]) {
+                        console.log($scope.sliderDate.value);
+                        timePeriod = self.dict[self.display[$scope.sliderDate.value]];
                         self.performQuery();
                     }
                 }
@@ -148,15 +135,15 @@ app.controller('SearchController', function(SearchService, $scope){
         //Construct query:
         var query = "";
 
-        for (i in prefixes){
+        for (var i in prefixes) {
             query += prefixes[i] + ' ';
         }
 
         query += select;
         query += " WHERE {";
 
-        for (i in where_clauses){
-            query += where_clauses[i];
+        for (i in whereClauses) {
+            query += whereClauses[i];
         }
 
         query += '. Filter(?timePeriod = \"' + timePeriod + '\"^^xsd:dateTime)}';
@@ -173,30 +160,30 @@ app.controller('SearchController', function(SearchService, $scope){
             var imageDict = [];
 
             // Clear current overlay
-            for (i in self.currentOverlay){
+            for (var i in self.currentOverlay){
                 mymap.removeLayer(self.currentOverlay[i]);
             }
 
             self.currentOverlay = [];
 
             // Add new overlay
+            var updateFunction = function(e) {
+                info.update(imageDict[e.srcElement.currentSrc]);
+            };
+
             for (i in observations){
                 imageDict[observations[i].image.value] = observations[i];
 
                 var coords = getBoundingCorners(String(observations[i].geoSparql.value));
                 var overlay = new L.imageOverlay(observations[i].image.value, coords).addTo(mymap).setOpacity(1);
                 
-                L.DomEvent.on(overlay._image, 'click', function(e){
-                    // console.log(e.srcElement.currentSrc);
-                    // console.log(imageDict[e.srcElement.currentSrc].subject.value);
-                    info.update(imageDict[e.srcElement.currentSrc]);
-                });
+                L.DomEvent.on(overlay._image, 'click', updateFunction);
 
                 self.currentOverlay.push(overlay);
                 mymap.panTo(coords[0]);
             }
 
-            var currentLayerGroup = L.layerGroup(self.currentOverlay);
+            // var currentLayerGroup = L.layerGroup(self.currentOverlay);
         });
     };
 });
