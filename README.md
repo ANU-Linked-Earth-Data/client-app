@@ -24,3 +24,25 @@ To deploy to Github Pages, try this:
 $ grunt build               # Build in dist/
 $ grunt buildcontrol:pages  # Push to Github gh-pages branch
 ```
+
+### Common Issues
+
+#### ```npm install``` not working 
+
+```
+npm ERR! Failed to parse json
+npm ERR! No data, empty input at 1:1
+npm ERR! 
+npm ERR! ^
+```
+
+Fixed by running
+
+```
+$ rm -r node_modules
+$ npm cache clean
+```
+
+Node not found for phantomjs-prebuilt@2.1.7:
+
+Fixed by installing node-legacy via ```sudo apt-get install nodejs-legacy```
