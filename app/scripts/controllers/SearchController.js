@@ -16,7 +16,7 @@ angular.module('LEDApp')
 
     self.currentOverlay = [];
 
-    $scope.selectGeolocation = null;
+    //$scope.selectGeolocation = null;
 
     prefixes.push('PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>');
     prefixes.push('PREFIX led: <http://www.example.org/ANU-LED#>');
@@ -71,12 +71,12 @@ angular.module('LEDApp')
 
     $scope.search = function(){
         console.log("On Click Search");
-        if($scope.selectGeolocation !== null) {
+        /*if($scope.selectGeolocation !== null) {
             prefixes.push('PREFIX spatial: <http://jena.apache.org/spatial#>');
             whereClauses.push('. ?subject ' + $scope.selectGeolocation + ' (' + $scope.geospatialQuery + ")");
 
             self.performQuery();
-        }
+        }*/
     };
 
     self.getMessage = function() {
@@ -156,7 +156,7 @@ angular.module('LEDApp')
         query += closing;
 
         console.log("Query: " + query);
-        
+
         var encoded = encodeURIComponent(query);
 
         SearchService.getAll(encoded).then(function (data) {
