@@ -7,7 +7,7 @@
 angular.module('LEDApp')
         .factory('SearchService', function($http) {
     var SearchService = {};
-    var remotehost = 'http://144.6.231.77/landsat/query?query=';
+    var remotehost = 'https://anulinkedearth.org/landsat/query?query=';
 
     var server = remotehost;
 

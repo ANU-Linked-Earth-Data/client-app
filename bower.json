@@ -15,7 +15,8 @@
     "moment": "~2.13.0",
     "bootstrap": "^3.3.0",
     "leaflet": "~0.7.7",
-    "jquery": "~1.11.3"
+    "jquery": "~1.11.3",
+    "rdflib.js": "linkeddata/rdflib.js#^0.7.0"
   },
   "devDependencies": {
     "angular-mocks": "^1.4.0"
