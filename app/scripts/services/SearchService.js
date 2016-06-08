@@ -1,9 +1,5 @@
 'use strict';
 
-/**
- * Created by Duo on 22-Mar-16.
- */
-
 angular.module('LEDApp')
         .factory('SearchService', function($http) {
     var SearchService = {};

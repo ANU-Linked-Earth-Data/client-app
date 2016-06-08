@@ -14,6 +14,7 @@ module.exports = function (grunt) {
 
   // Automatically load required Grunt tasks
   require('jit-grunt')(grunt, {
+    replace: 'grunt-replace',
     useminPrepare: 'grunt-usemin',
     ngtemplates: 'grunt-angular-templates',
     cdnify: 'grunt-google-cdn',
@@ -31,6 +32,35 @@ module.exports = function (grunt) {
 
     // Project settings
     yeoman: appConfig,
+
+    // Insert the application configuration where necessary
+    replace: {
+        config: {
+            options: {
+                // See https://github.com/outaTiME/grunt-replace
+                patterns: [{
+                    json: function(done) {
+                        var stage = grunt.option('stage') || 'dev';
+                        grunt.log.write('Switching to "' + stage + '" configuration\n');
+                        var configJSON = null;
+                        try {
+                            configJSON = grunt.file.readJSON('./config/environments/' + stage + '.json');
+                        } catch (error) {
+                            grunt.log.error('Error loading configuration: ' + error.message);
+                            throw error;
+                        }
+                        done(configJSON);
+                    }
+                }]
+            },
+            files: [{
+                expand: true,
+                flatten: true,
+                src: ['./config/config.js'],
+                dest: '<%= yeoman.app %>/scripts/services/'
+            }]
+        }
+    },
 
     // Watches files for changes and runs tasks based on the changed files
     watch: {
@@ -456,6 +486,7 @@ module.exports = function (grunt) {
 
     grunt.task.run([
       'clean:server',
+      'replace:config',
       'wiredep',
       'concurrent:server',
       'postcss:server',
@@ -480,6 +511,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
+    'replace:config',
     'wiredep',
     'useminPrepare',
     'concurrent:dist',

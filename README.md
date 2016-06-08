@@ -21,13 +21,24 @@ to take advantage of that.
 To deploy to Github Pages, try this:
 
 ```
-$ grunt build               # Build in dist/
+$ grunt build --stage=prod  # Build in dist/ with production config
 $ grunt buildcontrol:pages  # Push to Github gh-pages branch
 ```
 
-### Common Issues
+## Note on configuration
 
-#### ```npm install``` not working 
+Configuration is stored in `config/environments/<stage>.json`. You can specify a
+configuration stage by supplying the `--stage=<stage>` option to Grunt when
+running a built. For instance, `grunt build --stage=prod` makes a production
+build (essential for Github Pages!).
+
+At the moment, `dev` and `prod` are the only configurations. The only difference
+between the two is that `prod` uses a remote server, whilst `dev` uses a local
+SPARQL server, falling back to the remote one if necessary.
+
+## Common Issues
+
+### ```npm install``` not working
 
 ```
 npm ERR! Failed to parse json
