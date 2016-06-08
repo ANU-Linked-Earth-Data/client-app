@@ -1,11 +1,9 @@
 'use strict';
 
 angular.module('LEDApp')
-        .factory('SearchService', function($http) {
+        .factory('SearchService', function($http, config) {
     var SearchService = {};
-    var remotehost = 'https://anulinkedearth.org/landsat/query?query=';
-
-    var server = remotehost;
+    var server = config['sparql-endpoints'][0] + '?query=';
 
     var getFirstTimeStamp = server + 'SELECT+%3Fsubject+%3FtimePeriod+%0AWHERE+%7B%0A++%3Fsubject+a+%3Chttp%3A%2F%2Fpurl.org%2Flinked-data%2Fcube%23Observation%3E%0A++++.+%3Fsubject+%3Chttp%3A%2F%2Fpurl.org%2Flinked-data%2Fsdmx%2F2009%2Fdimension%23timePeriod%3E+%3FtimePeriod%0A%7D%0AORDER+BY+DESC(%3FtimePeriod)%0ALIMIT+1';
     var getLastTimeStamp = server + 'SELECT+%3Fsubject+%3FtimePeriod+%0AWHERE+%7B%0A++%3Fsubject+a+%3Chttp%3A%2F%2Fpurl.org%2Flinked-data%2Fcube%23Observation%3E%0A++++.+%3Fsubject+%3Chttp%3A%2F%2Fpurl.org%2Flinked-data%2Fsdmx%2F2009%2Fdimension%23timePeriod%3E+%3FtimePeriod%0A%7D%0AORDER+BY+ASC(%3FtimePeriod)%0ALIMIT+1';
