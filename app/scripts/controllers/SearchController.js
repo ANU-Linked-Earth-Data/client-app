@@ -97,7 +97,6 @@ angular.module('LEDApp')
 
         for (var i in options){
             self.dict[(moment(options[i]).format("DD/MM/YY, h:mm:ss a"))] = options[i];
-            console.log(self.dict);
             self.display.push(moment(options[i]).format("DD/MM/YY, h:mm:ss a"));
             timePeriod = options[i];
         }
@@ -135,15 +134,13 @@ angular.module('LEDApp')
     self.performQuery = function(){
         //Construct query:
         var query = prefixes.join('\n') +
-            select +
+            select + '\n' +
             'WHERE {\n' +
-            whereClauses.join('\n') +
+            whereClauses.join('\n') + '\n' +
             'FILTER(?timePeriod = \"' +
             timePeriod +
             '\"^^xsd:dateTime)}' +
             closing;
-
-        console.log("Query: " + query);
 
         SPARQLEndpoint.query(query).then(function (data) {
             // Read new observations
