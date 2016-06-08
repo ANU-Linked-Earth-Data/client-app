@@ -1,5 +1,9 @@
 'use strict';
 
+/**
+ * Created by Duo on 22-Mar-16.
+ */
+
 angular.module('LEDApp')
         .factory('SearchService', function($http) {
     var SearchService = {};
@@ -14,7 +18,7 @@ angular.module('LEDApp')
     SearchService.getAll = function(query) {
         $http.defaults.useXDomain = true;
 
-        console.log("Getting query: " + server+query);
+        //console.log("Getting query: " + server+query);
 
         var req = {
             method: 'GET',
@@ -69,8 +73,6 @@ angular.module('LEDApp')
 
         var req = {
             method: 'GET',
-
-            // TODO: Change this hardcoded query
             url: url,
             headers: {
                 'Accept': 'application/sparql-results+json,*/*;q=0.9'

@@ -57,7 +57,7 @@ angular.module('LEDApp')
             this._div.innerHTML += '<a href="' + subject + '">Link</a>';
             this._div.innerHTML += '<p>Band:' + props.band.value +'</p>';
             this._div.innerHTML += '<p>Resolution:' + props.resolution.value +'</p>';
-            this._div.innerHTML += '<p>Location: (' + (Math.round((lat + 0.00001) * 100) / 100) + ', ' + (Math.round((lon + 0.00001) * 100) / 100) + '(</p>';
+            this._div.innerHTML += '<p>Location: (' + (Math.round((lat + 0.00001) * 100) / 100) + ', ' + (Math.round((lon + 0.00001) * 100) / 100) + ')</p>';
         } else {
             this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
         }

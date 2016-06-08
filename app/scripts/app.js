@@ -3,7 +3,8 @@
 angular.module('LEDApp', [
     'ngRoute',
     'ngMessages',
-    'rzModule'
+    'rzModule',
+    'leaflet-directive'
 ]).config(function($routeProvider){
     $routeProvider.when("/", {
         templateUrl: "views/search.html",
