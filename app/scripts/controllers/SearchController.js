@@ -4,29 +4,11 @@ angular.module('LEDApp')
         .controller('SearchController', function(SearchService, SPARQLEndpoint, $scope){
     var self = this;
     this.hasSearched = false;
-    var prefixes = [];
-    var whereClauses = [];
-    var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?image ?resolution ?lon ?lat';
     var timePeriod;
-    var closing = 'ORDER BY DESC(?timePeriod) LIMIT 25';
 
     self.currentOverlay = [];
 
     //$scope.selectGeolocation = null;
-
-    prefixes.push('PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>');
-    prefixes.push('PREFIX led: <http://www.example.org/ANU-LED#>');
-    prefixes.push('PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>');
-
-    whereClauses.push('?subject a <http://purl.org/linked-data/cube#Observation> .');
-    whereClauses.push('?subject <http://www.example.org/ANU-LED#imageData> ?image .');
-    whereClauses.push('?subject <http://www.example.org/ANU-LED#etmBand> ?band .');
-    whereClauses.push('?subject <http://www.example.org/ANU-LED#bounds> ?geoSparql .');
-    whereClauses.push('?subject <http://www.example.org/ANU-LED#time> ?timePeriod .');
-    whereClauses.push('?subject <http://www.example.org/ANU-LED#resolution> ?resolution .');
-    whereClauses.push('?subject <http://www.example.org/ANU-LED#location> ?location .');
-    whereClauses.push('?location <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat .');
-    whereClauses.push('?location <http://www.w3.org/2003/01/geo/wgs84_pos#lon> ?lon .');
 
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
@@ -58,6 +40,8 @@ angular.module('LEDApp')
             this._div.innerHTML += '<p>Band:' + props.band.value +'</p>';
             this._div.innerHTML += '<p>Resolution:' + props.resolution.value +'</p>';
             this._div.innerHTML += '<p>Location: (' + (Math.round((lat + 0.00001) * 100) / 100) + ', ' + (Math.round((lon + 0.00001) * 100) / 100) + ')</p>';
+
+            self.performQueryLimitLocation(lat, lon);
         } else {
             this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
         }
@@ -66,7 +50,7 @@ angular.module('LEDApp')
     info.addTo(mymap);
 
     $scope.search = function(){
-        console.log("On Click Search");
+        //console.log("On Click Search");
         /*if($scope.selectGeolocation !== null) {
             prefixes.push('PREFIX spatial: <http://jena.apache.org/spatial#>');
             whereClauses.push('. ?subject ' + $scope.selectGeolocation + ' (' + $scope.geospatialQuery + ")");
@@ -76,6 +60,7 @@ angular.module('LEDApp')
     };
 
     self.getMessage = function() {
+
     };
 
     /*  Get the top left and bottom right corners of polygon definition:
@@ -101,7 +86,7 @@ angular.module('LEDApp')
             timePeriod = options[i];
         }
 
-        self.performQuery();
+        self.performQueryLimitTime();
 
         //Slider config with callbacks
         $scope.sliderDate = {
@@ -122,7 +107,7 @@ angular.module('LEDApp')
                     if (timePeriod !== self.dict[$scope.sliderDate.value]) {
                         console.log($scope.sliderDate.value);
                         timePeriod = self.dict[self.display[$scope.sliderDate.value]];
-                        self.performQuery();
+                        self.performQueryLimitTime();
                     }
                 }
             }
@@ -131,18 +116,14 @@ angular.module('LEDApp')
         //$scope.$broadcast('rzSliderForceRender');
     });
 
-    self.performQuery = function(){
-        //Construct query:
-        var query = prefixes.join('\n') +
-            select + '\n' +
-            'WHERE {\n' +
-            whereClauses.join('\n') + '\n' +
-            'FILTER(?timePeriod = \"' +
-            timePeriod +
-            '\"^^xsd:dateTime)}' +
-            closing;
+    self.performQueryLimitLocation = function (lat, lon) {
+        SearchService.performQueryLimitLocation(lat,lon).then(function(data){
+            data.getMessage();
+        });
+    };
 
-        SPARQLEndpoint.query(query).then(function (data) {
+    self.performQueryLimitTime = function(){
+        SearchService.performQueryLimitTime(timePeriod).then(function (data) {
             // Read new observations
             var observations = data.results.bindings;
             var imageDict = [];

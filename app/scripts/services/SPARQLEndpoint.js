@@ -22,7 +22,6 @@ angular.module('LEDApp')
                     return;
                 }
 
-
                 var req = {
                     method: 'GET',
                     url: nextURL,

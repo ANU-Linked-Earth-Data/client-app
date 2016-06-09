@@ -49,6 +49,20 @@ describe('Search Service Test', function(){
             });
         }));
 
+        it('Test select location', inject(function(SearchService){
+            var lon = -35.4;
+            var lat = 149.01600000000002;
+
+            SearchService.performQueryLimitLocation(lat, lon).then(function(data){
+                var observations = data.results.bindings;
+
+                for(var i in observations){
+                    expect(observations[i].lat.value).toBe(lat);
+                    expect(observations[i].lon.value).toBe(lon);
+                }
+            });
+        }));
+
         it('Valid output', function(){
             expect(true).toBe(true);
         });
