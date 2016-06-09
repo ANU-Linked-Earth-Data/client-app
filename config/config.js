@@ -6,6 +6,6 @@
 // http://newtriks.com/2013/11/29/environment-specific-configuration-in-angularjs-using-grunt/
 
 angular.module('services.config', [])
-  .constant('configuration', {
-    foo: '@@foo'
-  });
+  .constant('config',
+    @@cfg
+  );

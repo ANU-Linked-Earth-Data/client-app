@@ -42,14 +42,16 @@ module.exports = function (grunt) {
                     json: function(done) {
                         var stage = grunt.option('stage') || 'dev';
                         grunt.log.write('Switching to "' + stage + '" configuration\n');
-                        var configJSON = null;
+                        var configData = null;
                         try {
-                            configJSON = grunt.file.readJSON('./config/environments/' + stage + '.json');
+                            configData = grunt.file.readJSON('./config/environments/' + stage + '.json');
                         } catch (error) {
                             grunt.log.error('Error loading configuration: ' + error.message);
                             throw error;
                         }
-                        done(configJSON);
+                        // Convert from/to JSON to make sure it's valid
+                        var configJSON = JSON.stringify(configData);
+                        done({cfg: configJSON});
                     }
                 }]
             },

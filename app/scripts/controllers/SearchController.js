@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('LEDApp')
-        .controller('SearchController', function(SearchService, $scope){
+        .controller('SearchController', function(SearchService, SPARQLEndpoint, $scope){
     var self = this;
     this.hasSearched = false;
     var prefixes = [];
@@ -18,15 +18,15 @@ angular.module('LEDApp')
     prefixes.push('PREFIX led: <http://www.example.org/ANU-LED#>');
     prefixes.push('PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>');
 
-    whereClauses.push('?subject a <http://purl.org/linked-data/cube#Observation>');
-    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#imageData> ?image');
-    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#etmBand> ?band');
-    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#bounds> ?geoSparql');
-    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#time> ?timePeriod');
-    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#resolution> ?resolution');
-    whereClauses.push('. ?subject <http://www.example.org/ANU-LED#location> ?location');
-    whereClauses.push('. ?location <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat');
-    whereClauses.push('. ?location <http://www.w3.org/2003/01/geo/wgs84_pos#lon> ?lon');
+    whereClauses.push('?subject a <http://purl.org/linked-data/cube#Observation> .');
+    whereClauses.push('?subject <http://www.example.org/ANU-LED#imageData> ?image .');
+    whereClauses.push('?subject <http://www.example.org/ANU-LED#etmBand> ?band .');
+    whereClauses.push('?subject <http://www.example.org/ANU-LED#bounds> ?geoSparql .');
+    whereClauses.push('?subject <http://www.example.org/ANU-LED#time> ?timePeriod .');
+    whereClauses.push('?subject <http://www.example.org/ANU-LED#resolution> ?resolution .');
+    whereClauses.push('?subject <http://www.example.org/ANU-LED#location> ?location .');
+    whereClauses.push('?location <http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?lat .');
+    whereClauses.push('?location <http://www.w3.org/2003/01/geo/wgs84_pos#lon> ?lon .');
 
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
@@ -97,7 +97,6 @@ angular.module('LEDApp')
 
         for (var i in options){
             self.dict[(moment(options[i]).format("DD/MM/YY, h:mm:ss a"))] = options[i];
-            console.log(self.dict);
             self.display.push(moment(options[i]).format("DD/MM/YY, h:mm:ss a"));
             timePeriod = options[i];
         }
@@ -133,30 +132,17 @@ angular.module('LEDApp')
     });
 
     self.performQuery = function(){
-
         //Construct query:
-        var query = "";
+        var query = prefixes.join('\n') +
+            select + '\n' +
+            'WHERE {\n' +
+            whereClauses.join('\n') + '\n' +
+            'FILTER(?timePeriod = \"' +
+            timePeriod +
+            '\"^^xsd:dateTime)}' +
+            closing;
 
-        for (var i in prefixes) {
-            query += prefixes[i] + ' ';
-        }
-
-        query += select;
-        query += " WHERE {";
-
-        for (i in whereClauses) {
-            query += whereClauses[i];
-        }
-
-        query += '. Filter(?timePeriod = \"' + timePeriod + '\"^^xsd:dateTime)}';
-        query += closing;
-
-        console.log("Query: " + query);
-
-        var encoded = encodeURIComponent(query);
-
-        SearchService.getAll(encoded).then(function (data) {
-
+        SPARQLEndpoint.query(query).then(function (data) {
             // Read new observations
             var observations = data.results.bindings;
             var imageDict = [];

@@ -1,6 +1,7 @@
 'use strict';
 
 angular.module('LEDApp', [
+    'services.config',
     'ngRoute',
     'ngMessages',
     'rzModule',
