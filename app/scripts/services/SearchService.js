@@ -95,9 +95,9 @@ angular.module('LEDApp')
 
             var response = SPARQLEndpoint.query(query);
 
-            SPARQLEndpoint.query(query).then(function (data) {
-                data.getMessage();
-            });
+            /*response.then(function (data) {
+
+            });*/
 
             return response;
         };
