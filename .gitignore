@@ -2,7 +2,7 @@
 idea/
 .idea/
 *.swp
-session.vim
+Session.vim
 
 # Build cruft
 /node_modules/
