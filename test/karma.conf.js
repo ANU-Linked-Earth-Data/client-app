@@ -31,7 +31,7 @@ module.exports = function(config) {
       'bower_components/bootstrap/dist/js/bootstrap.js',
       'bower_components/leaflet/dist/leaflet-src.js',
       'bower_components/angular-leaflet-directive/dist/angular-leaflet-directive.js',
-      'bower_components/Chart.js/Chart.js',
+      'bower_components/Chart.js/dist/Chart.js',
       'bower_components/angular-chart.js/dist/angular-chart.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower

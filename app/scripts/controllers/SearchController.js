@@ -197,10 +197,10 @@ angular.module('LEDApp')
                 };
 
                 for (i in observations){
-                    imageDict[observations[i].image.value] = observations[i];
+                    imageDict[observations[i].value.value] = observations[i];
 
                     var coords = getBoundingCorners(String(observations[i].geoSparql.value));
-                    var overlay = new L.imageOverlay(observations[i].image.value, coords).addTo(mymap).setOpacity(1);
+                    var overlay = new L.imageOverlay(observations[i].value.value, coords).addTo(mymap).setOpacity(1);
 
                     L.DomEvent.on(overlay._image, 'click', onClick);
 

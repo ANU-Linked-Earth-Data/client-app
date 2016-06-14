@@ -15,7 +15,6 @@ angular.module('LEDApp')
         ];
 
         var whereClauses = [
-            '?subject led:imageData ?image .',
             '?subject led:etmBand ?band .',
             '?subject led:bounds ?geoSparql .',
             '?subject led:time ?timePeriod .',
@@ -29,9 +28,9 @@ angular.module('LEDApp')
         ];
 
         //TODO: Only select relevent things
-        var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?image ?resolution ?lon ?lat ?dggsLevelSquare ?dggsLevelPixel ?dggsCell';
-        var selectDistinct = 'SELECT DISTINCT ?subject ?geoSparql ?timePeriod ?band ?image ?resolution ?lon ?lat ?dggsLevelSquare ?dggsLevelPixel';
-        var closing = 'ORDER BY DESC(?timePeriod)';
+        var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?value ?resolution ?lon ?lat ?dggsLevelSquare ?dggsLevelPixel ?dggsCell';
+        var selectDistinct = 'SELECT DISTINCT ?subject ?geoSparql ?timePeriod ?band ?value ?resolution ?lon ?lat ?dggsLevelSquare ?dggsLevelPixel';
+        var closing = 'ORDER BY ASC(?timePeriod)';
 
         //$scope.selectGeolocation = null;
 
@@ -39,14 +38,14 @@ angular.module('LEDApp')
             'SELECT DISTINCT ?timePeriod WHERE {',
             '?subject a qb:Observation .',
             '?subject led:time ?timePeriod',
-            '} ORDER BY DESC(?timePeriod)'
+            '} ORDER BY ASC(?timePeriod)'
         ].join('\n');
 
         var getDistinctBands = [
             'SELECT DISTINCT ?band WHERE {',
             '?subject a qb:Observation .',
             '?subject led:etmBand ?band',
-            '} ORDER BY DESC(?band)'
+            '} ORDER BY ASC(?band)'
         ].join('\n');
 
         SearchService.getDistinctTime = function() {
@@ -68,7 +67,8 @@ angular.module('LEDApp')
         SearchService.performQueryLimitLocation = function (cell) {
             var query = prefixes.join('\n') +
                 selectDistinct + '\n' +
-                'WHERE {\n ?subject a led:Pixel . \n' +
+                'WHERE {\n ?subject a led:Pixel .' +
+                '?subject led:value ?value . \n' +
                 whereClauses.join('\n') + '\n' +
                 'FILTER(?dggsCell = \"' +
                 cell +
@@ -97,7 +97,8 @@ angular.module('LEDApp')
             //Construct query:
             var query = prefixes.join('\n') +
                 select + '\n' +
-                'WHERE {\n ?subject a led:GridSquare . \n' +
+                'WHERE {\n ?subject a led:GridSquare .' +
+                '?subject led:imageData ?value .  \n' +
                 whereClauses.join('\n') + '\n' +
                 'FILTER(?timePeriod = \"' +
                 timePeriod +

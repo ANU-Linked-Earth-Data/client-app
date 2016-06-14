@@ -18,10 +18,8 @@ angular.module('LEDApp')
                 var values = [];
 
                 for (var i in observations){
-                    labels.push(i);
-                    values.push(observations[i].image.value);
-
-                    console.log("Getting time: " + observations[i].timePeriod.value);
+                    labels.push((moment(observations[i].timePeriod.value).format("DD/MM/YY, h:mm:ss a")));
+                    values.push(Number(observations[i].value.value).toFixed(2));    //Display value to 2 decimal places
                 }
 
                 $scope.data = [values];
@@ -75,7 +73,7 @@ angular.module('LEDApp')
             scaleShowGridLines : true,
 
             //String - Colour of the grid lines
-            scaleGridLineColor : "rgba(0,0,0,.05)",
+            scaleGridLineColor : "rgba(255,255,255,.5)",
 
             //Number - Width of the grid lines
             scaleGridLineWidth : 1,
@@ -90,7 +88,13 @@ angular.module('LEDApp')
             barValueSpacing : 2,
 
             //Number - Spacing between data sets within X values
-            barDatasetSpacing : 1
+            barDatasetSpacing : 1,
+
+            scales: {
+                xAxes: [{
+                    display: false
+                }]
+            }
             //tooltipTemplate: $scope.tooltipTextFunction($scope.bar),
 
             //scaleLabel: "      <%=value%>"
