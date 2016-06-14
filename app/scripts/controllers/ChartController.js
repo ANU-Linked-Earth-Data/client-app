@@ -3,9 +3,31 @@
 /*Sourced from https://github.com/ANU-WALD/aus-env/ */
 
 angular.module('LEDApp')
-    .controller('ChartController', function($scope){
+    .controller('ChartController', function($scope, SearchService){
 
+        var self = this;
 
+        $scope.$on('onSelectRegion', function(event, cell){
+            self.performQueryLimitLocation(cell);
+        });
+
+        self.performQueryLimitLocation = function (cell) {
+            SearchService.performQueryLimitLocation(cell).then(function(data){
+                var observations = data.results.bindings;
+                var labels = [];
+                var values = [];
+
+                for (var i in observations){
+                    labels.push(i);
+                    values.push(observations[i].image.value);
+
+                    console.log("Getting time: " + observations[i].timePeriod.value);
+                }
+
+                $scope.data = [values];
+                $scope.labels = labels;
+            });
+        };
 
         /* $scope.bar = {
             title:"Test Chart",
@@ -19,6 +41,28 @@ angular.module('LEDApp')
         $scope.barSeries = ['# of votes'];
         $scope.barColors = [{fillColor:["#66987F"]}];
         $scope.barData =  [12, 19, 3, 5, 2, 3];
+
+
+
+        //$scope.selection = selection;
+
+        $scope.origViewOptions = [
+            {
+                style:'bar',
+                icon:'fa-bar-chart',
+                tooltip:'Annual time series',
+            },
+            {
+                style:'pie',
+                icon:'fa-pie-chart',
+                tooltip:'Proportion by land cover type',
+            }//,
+//      {
+//        style:'timeseries',
+//        icon:'fa-line-chart',
+//        tooltip:'Detailed time series'
+//      }
+        ]; */
 
         $scope.barOptions =  {
             // Sets the chart to be responsive
@@ -52,31 +96,10 @@ angular.module('LEDApp')
             //scaleLabel: "      <%=value%>"
         };
 
-        //$scope.selection = selection;
-
-        $scope.origViewOptions = [
-            {
-                style:'bar',
-                icon:'fa-bar-chart',
-                tooltip:'Annual time series',
-            },
-            {
-                style:'pie',
-                icon:'fa-pie-chart',
-                tooltip:'Proportion by land cover type',
-            }//,
-//      {
-//        style:'timeseries',
-//        icon:'fa-line-chart',
-//        tooltip:'Detailed time series'
-//      }
-        ]; */
-
         $scope.labels = ['2006', '2007', '2008', '2009', '2010', '2011', '2012'];
-        $scope.series = ['Series A', 'Series B'];
+        $scope.series = ['Values'];
 
         $scope.data = [
-            [65, 59, 80, 81, 56, 55, 40],
-            [28, 48, 40, 19, 86, 27, 90]
+            [65, 59, 80, 81, 56, 55, 40]
         ];
     });

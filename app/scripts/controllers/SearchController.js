@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('LEDApp')
-    .controller('SearchController', function(SearchService, SPARQLEndpoint, $scope, $compile){
+    .controller('SearchController', function(SearchService, $scope, $compile){
         var self = this;
         this.hasSearched = false;
         var timePeriod;
@@ -35,12 +35,15 @@ angular.module('LEDApp')
                 var lat = Number(props.lat.value);
                 var lon = Number(props.lon.value);
 
+                //console.log("Clicked: \n" + JSON.stringify(props));
+
                 this._div.innerHTML = '<h4>Image Details</h4>';
                 this._div.innerHTML += '<a href="' + subject + '">Link</a>';
                 this._div.innerHTML += '<p>Band:' + props.band.value +'</p>';
+                this._div.innerHTML += '<p>Pixel:' + props.dggsLevelPixel.value +'</p>';
+                this._div.innerHTML += '<p>Square:' + props.dggsLevelSquare.value +'</p>';
                 this._div.innerHTML += '<p>Resolution:' + props.resolution.value +'</p>';
                 this._div.innerHTML += '<p>Location: (' + (Math.round((lat + 0.00001) * 100) / 100) + ', ' + (Math.round((lon + 0.00001) * 100) / 100) + ')</p>';
-
 
             } else {
                 this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
@@ -115,17 +118,26 @@ angular.module('LEDApp')
         }
 
         //Slider config with steps as the distinct datestamps of the observations
-        SearchService.getDistinctTime().then(function (options) {
+        SearchService.getDistinctTime().then(function (data) {
+            var options = [];
             self.dict = [];
             self.display = [];
 
-            for (var i in options){
+            for (var i in data.results.bindings){
+                options.push(data.results.bindings[i].timePeriod.value);
+            }
+
+            for (i in options){
                 self.dict[(moment(options[i]).format("DD/MM/YY, h:mm:ss a"))] = options[i];
                 self.display.push(moment(options[i]).format("DD/MM/YY, h:mm:ss a"));
                 timePeriod = options[i];
             }
 
-            self.performQueryLimitTime();
+            SearchService.getDistinctBands().then(function (prop){
+                console.log(JSON.stringify(prop));
+
+                self.performQueryLimitTime();
+            });
 
             //Slider config with callbacks
             $scope.sliderDate = {
@@ -155,10 +167,16 @@ angular.module('LEDApp')
             //$scope.$broadcast('rzSliderForceRender');
         });
 
-        self.performQueryLimitLocation = function (lat, lon) {
-            SearchService.performQueryLimitLocation(lat,lon).then(function(data){
-                graph.update(data);
-            });
+
+
+        // Add new overlay
+        var updateFunction = function(e) {
+            info.update(e);
+
+            //$scope.coord.lat = Number(imageDict[e.target.src].lat.value);
+            //$scope.coord.lon = Number(imageDict[e.target.src].lon.value);
+
+            $scope.$broadcast('onSelectRegion', e.dggsCell.value);
         };
 
         self.performQueryLimitTime = function(){
@@ -174,14 +192,8 @@ angular.module('LEDApp')
 
                 self.currentOverlay = [];
 
-                // Add new overlay
-                var updateFunction = function(e) {
-                    info.update(imageDict[e.target.src]);
-
-                    var lat = Number(imageDict[e.target.src].lat.value);
-                    var lon = Number(imageDict[e.target.src].lon.value);
-
-                    self.performQueryLimitLocation(lat, lon);
+                var onClick = function(e){
+                    updateFunction(imageDict[e.target.src]);
                 };
 
                 for (i in observations){
@@ -190,7 +202,7 @@ angular.module('LEDApp')
                     var coords = getBoundingCorners(String(observations[i].geoSparql.value));
                     var overlay = new L.imageOverlay(observations[i].image.value, coords).addTo(mymap).setOpacity(1);
 
-                    L.DomEvent.on(overlay._image, 'click', updateFunction);
+                    L.DomEvent.on(overlay._image, 'click', onClick);
 
                     self.currentOverlay.push(overlay);
                     mymap.panTo(coords[0]);
