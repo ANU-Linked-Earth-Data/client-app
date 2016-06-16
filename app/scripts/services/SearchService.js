@@ -64,7 +64,7 @@ angular.module('LEDApp')
             });
         };
 
-        SearchService.performQueryLimitLocation = function (cell) {
+        SearchService.performQueryLimitLocation = function (cell, band) {
             var query = prefixes.join('\n') +
                 selectDistinct + '\n' +
                 'WHERE {\n ?subject a led:Pixel .' +
@@ -74,6 +74,8 @@ angular.module('LEDApp')
                 cell +
                 '\" && ?dggsLevelPixel = ' +
                 dggsLevel +
+                ' && ?band = ' +
+                band +
                 ')}' +
                 closing;
 

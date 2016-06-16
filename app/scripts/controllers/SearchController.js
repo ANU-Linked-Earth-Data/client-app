@@ -7,6 +7,7 @@ angular.module('LEDApp')
         var timePeriod;
 
         self.currentOverlay = [];
+        self.bandLayer = 0;
 
         //$scope.selectGeolocation = null;
 
@@ -61,7 +62,6 @@ angular.module('LEDApp')
 
             var newScope = $scope.$new();
             $compile(div)(newScope);
-            console.log("Compiled");
 
             return div;
         };
@@ -133,11 +133,7 @@ angular.module('LEDApp')
                 timePeriod = options[i];
             }
 
-            SearchService.getDistinctBands().then(function (prop){
-                console.log(JSON.stringify(prop));
-
-                self.performQueryLimitTime();
-            });
+            self.performQueryLimitTime();
 
             //Slider config with callbacks
             $scope.sliderDate = {
@@ -154,9 +150,7 @@ angular.module('LEDApp')
                     },
                     onEnd: function () {
                         //TODO: Only update if end date is different
-                        console.log($scope.sliderDate.value);
                         if (timePeriod !== self.dict[$scope.sliderDate.value]) {
-                            console.log($scope.sliderDate.value);
                             timePeriod = self.dict[self.display[$scope.sliderDate.value]];
                             self.performQueryLimitTime();
                         }
@@ -176,39 +170,100 @@ angular.module('LEDApp')
             //$scope.coord.lat = Number(imageDict[e.target.src].lat.value);
             //$scope.coord.lon = Number(imageDict[e.target.src].lon.value);
 
-            $scope.$broadcast('onSelectRegion', e.dggsCell.value);
+            $scope.$broadcast('onSelectRegion', e.dggsCell.value, e.band.value);
         };
 
         self.performQueryLimitTime = function(){
-            SearchService.performQueryLimitTime(timePeriod).then(function (data) {
-                // Read new observations
-                var observations = data.results.bindings;
-                var imageDict = [];
+            SearchService.getDistinctBands().then(function (bands){
+                var images = [];
+                self.bands = bands;
 
-                // Clear current overlay
-                for (var i in self.currentOverlay){
-                    mymap.removeLayer(self.currentOverlay[i]);
+                for(var x in bands){
+                    x.toString();
+                    images.push([]);
                 }
 
-                self.currentOverlay = [];
 
-                var onClick = function(e){
-                    updateFunction(imageDict[e.target.src]);
-                };
+                SearchService.performQueryLimitTime(timePeriod).then(function (data) {
+                    // Read new observations
 
-                for (i in observations){
-                    imageDict[observations[i].value.value] = observations[i];
+                    var observations = data.results.bindings;
+                    if(self.imageDict == null){
+                        self.imageDict = [];
+                    }
 
-                    var coords = getBoundingCorners(String(observations[i].geoSparql.value));
-                    var overlay = new L.imageOverlay(observations[i].value.value, coords).addTo(mymap).setOpacity(1);
+                    // Clear current overlay
+                    for (var i in self.currentOverlay){
+                        mymap.removeLayer(self.currentOverlay[i]);
+                    }
 
-                    L.DomEvent.on(overlay._image, 'click', onClick);
+                    self.currentOverlay = [];
 
-                    self.currentOverlay.push(overlay);
-                    mymap.panTo(coords[0]);
-                }
+                    var onClick = function(e){
+                        updateFunction(self.imageDict[e.target.src]);
+                    };
 
-                // var currentLayerGroup = L.layerGroup(self.currentOverlay);
+                    for (i in observations){
+
+                        self.imageDict[observations[i].value.value] = observations[i];
+
+                        var coords = getBoundingCorners(String(observations[i].geoSparql.value));
+                        var overlay = new L.imageOverlay(observations[i].value.value, coords, {interactive: true});
+
+                        //overlay.on('click', onClick);
+                        //L.DomEvent.on(overlay._image, 'click', onClick);
+
+                        self.currentOverlay.push(overlay);
+                        images[Number(observations[i].band.value)].push(overlay);
+                        mymap.panTo(coords[0]);
+                    }
+
+                    var layers = {};
+
+                    for(i in bands){
+                        layers[i] = L.featureGroup(images[i]);
+                        //layers[i];
+                    }
+
+                    if(self.layer != null && self.layers != null){
+                        for(var l in self.layers){
+                            self.layer.removeLayer(self.layers[l]);
+                        }
+
+                        for(l in layers){
+                            self.layer.addBaseLayer(layers[l], l);
+                        }
+
+                        //Make a layer visible
+                        if(self.bandLayer < layers.length){
+                            layers[self.bandLayer].addTo(mymap);
+                        } else {
+                            layers[0].addTo(mymap);
+                        }
+
+                    } else {
+                        self.layer = L.control.layers(layers, null);
+                        mymap.on('baselayerchange', function(e){
+                            self.bandLayer = Number(e.name);
+                            e.layer.on('click', function() { console.log('Clicked on a group!'); });
+                        });
+
+                        self.layer.addTo(mymap);
+                        layers[0].addTo(mymap);
+
+                        mymap.on('click', function(e) {
+                            onClick(e.originalEvent);
+                        });
+                    }
+
+                    self.layers = layers;
+
+
+                    // var currentLayerGroup = L.layerGroup(self.currentOverlay);
+                    //addTo(mymap).setOpacity(1);
+                    //
+                });
             });
+
         };
     });

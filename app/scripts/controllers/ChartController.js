@@ -7,12 +7,12 @@ angular.module('LEDApp')
 
         var self = this;
 
-        $scope.$on('onSelectRegion', function(event, cell){
-            self.performQueryLimitLocation(cell);
+        $scope.$on('onSelectRegion', function(event, cell, band){
+            self.performQueryLimitLocation(cell, band);
         });
 
-        self.performQueryLimitLocation = function (cell) {
-            SearchService.performQueryLimitLocation(cell).then(function(data){
+        self.performQueryLimitLocation = function (cell, band) {
+            SearchService.performQueryLimitLocation(cell, band).then(function(data){
                 var observations = data.results.bindings;
                 var labels = [];
                 var values = [];
@@ -104,6 +104,6 @@ angular.module('LEDApp')
         $scope.series = ['Values'];
 
         $scope.data = [
-            [65, 59, 80, 81, 56, 55, 40]
+            [0, 0, 0, 0, 0, 0, 0]
         ];
     });
