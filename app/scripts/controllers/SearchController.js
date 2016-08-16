@@ -9,9 +9,15 @@ angular.module('LEDApp')
         self.currentOverlay = [];
         self.bandLayer = 0;
 
+        var defaultDggsLevel = 5;
+
         //$scope.selectGeolocation = null;
 
-        var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+        var mymap = L.map('mapid').setView([-34.6, 148.33], 9);
+
+        mymap.on('zoomend', function(){
+            self.performQueryLimitTime();
+        });
 
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
@@ -165,11 +171,15 @@ angular.module('LEDApp')
 
         // Add new overlay
         var updateFunction = function(e) {
+            if(e==null)
+                return;
+
             info.update(e);
 
             //$scope.coord.lat = Number(imageDict[e.target.src].lat.value);
             //$scope.coord.lon = Number(imageDict[e.target.src].lon.value);
 
+            console.log(e.dggsCell.value);
             $scope.$broadcast('onSelectRegion', e.dggsCell.value, e.band.value);
         };
 
@@ -183,8 +193,9 @@ angular.module('LEDApp')
                     images.push([]);
                 }
 
+                var zoomLevel = mymap.getZoom() - 5;
 
-                SearchService.performQueryLimitTime(timePeriod).then(function (data) {
+                SearchService.performQueryLimitTime(zoomLevel, timePeriod).then(function (data) {
                     // Read new observations
 
                     var observations = data.results.bindings;
@@ -215,14 +226,14 @@ angular.module('LEDApp')
 
                         self.currentOverlay.push(overlay);
                         images[Number(observations[i].band.value)].push(overlay);
-                        mymap.panTo(coords[0]);
+
+                        //mymap.panTo(coords[0]);
                     }
 
                     var layers = {};
 
                     for(i in bands){
                         layers[i] = L.featureGroup(images[i]);
-                        //layers[i];
                     }
 
                     if(self.layer != null && self.layers != null){

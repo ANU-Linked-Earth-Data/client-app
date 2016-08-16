@@ -4,9 +4,6 @@ angular.module('LEDApp')
     .factory('SearchService', function($http, SPARQLEndpoint) {
         var SearchService = {};
 
-        //TODO: Allow this to be variable
-        var dggsLevel = 5;
-
         var prefixes = [
             'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>',
             'PREFIX led: <http://www.example.org/ANU-LED#>',
@@ -72,9 +69,7 @@ angular.module('LEDApp')
                 whereClauses.join('\n') + '\n' +
                 'FILTER(?dggsCell = \"' +
                 cell +
-                '\" && ?dggsLevelPixel = ' +
-                dggsLevel +
-                ' && ?band = ' +
+                '\" && ?band = ' +
                 band +
                 ')}' +
                 closing;
@@ -88,14 +83,8 @@ angular.module('LEDApp')
 
             return response;
         };
-        /*
-         && ?dggsLevelPixel = ' +
-         dggsLevel +
-         ' && ?dggsLevelSquare = ' +
-         dggsLevel +
-         */
 
-        SearchService.performQueryLimitTime = function(timePeriod){
+        SearchService.performQueryLimitTime = function(level, timePeriod){
             //Construct query:
             var query = prefixes.join('\n') +
                 select + '\n' +
@@ -105,7 +94,7 @@ angular.module('LEDApp')
                 'FILTER(?timePeriod = \"' +
                 timePeriod +
                 '\"^^xsd:datetime && ?dggsLevelSquare = ' +
-                dggsLevel +
+                level +
                 ')}' +
                 closing;
 
@@ -113,6 +102,7 @@ angular.module('LEDApp')
 
             return response;
         };
+
         return SearchService;
     });
 
