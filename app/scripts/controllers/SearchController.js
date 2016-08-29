@@ -10,6 +10,7 @@ angular.module('LEDApp')
 
         var cachedImages = [];
         var cachedSubjects = [];
+        var visibleLayers = [];
 
         self.currentOverlay = [];
         self.bandLayer = 0;
@@ -21,12 +22,12 @@ angular.module('LEDApp')
         var mymap = L.map('mapid').setView([-34.6, 148.33], 9);
 
         mymap.on('zoomend', function(){
-            self.performQueryLimitTime(cachedTimePeriod);
+            self.performQueryLimitTime(mymap.getZoom()-5, cachedTimePeriod);
         });
 
         mymap.on('moveend', function(){
             self.onMoveMap(cachedZoomLevel, cachedTimePeriod);
-        })
+        });
 
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
@@ -149,7 +150,7 @@ angular.module('LEDApp')
             }
 
             if(options.length > 0)
-                self.performQueryLimitTime(options[options.length-1]);
+                self.performQueryLimitTime(mymap.getZoom()-5, options[options.length-1]);
 
             //Slider config with callbacks
             $scope.sliderDate = {
@@ -167,7 +168,7 @@ angular.module('LEDApp')
                     onEnd: function () {
                         //TODO: Only update if end date is different
                         if (cachedTimePeriod !== self.dict[$scope.sliderDate.value]) {
-                            self.performQueryLimitTime(self.dict[self.display[$scope.sliderDate.value]]);
+                            self.performQueryLimitTime(cachedZoomLevel, self.dict[self.display[$scope.sliderDate.value]]);
                         }
                     }
                 }
@@ -190,7 +191,10 @@ angular.module('LEDApp')
             $scope.$broadcast('onSelectRegion', e.dggsCell.value, e.band.value);
         };
 
-        self.performQueryLimitTime = function(timePeriod){
+        self.performQueryLimitTime = function(zoomLevel, timePeriod){
+            cachedTimePeriod = timePeriod;
+            cachedZoomLevel = zoomLevel;
+
             SearchService.getDistinctBands().then(function (bands) {
                 cachedImages = [];
                 cachedSubjects = [];
@@ -203,14 +207,13 @@ angular.module('LEDApp')
                     cachedSubjects.push([]);
                 }
 
-                var zoomLevel = mymap.getZoom() - 5;
                 self.onMoveMap(zoomLevel, timePeriod);
             });
         };
 
         self.onMoveMap = function(zoomLevel, timePeriod){
             if(self.bands == null){
-                self.performQueryLimitTime(timePeriod);
+                self.performQueryLimitTime(zoomLevel, timePeriod);
             } else {
                 SearchService.performQueryLimitTime(zoomLevel, timePeriod).then(function (data) {
                     // Read new observations
@@ -223,6 +226,10 @@ angular.module('LEDApp')
                     // Clear current overlay
                     for (var i in self.currentOverlay) {
                         mymap.removeLayer(self.currentOverlay[i]);
+                    }
+
+                    while(visibleLayers.length != 0){
+                        mymap.removeLayer(visibleLayers.pop());
                     }
 
                     self.currentOverlay = [];
@@ -269,8 +276,10 @@ angular.module('LEDApp')
                         //Make a layer visible
                         if (self.bandLayer < layers.length) {
                             layers[self.bandLayer].addTo(mymap);
+                            visibleLayers.push(layers[self.bandLayer]);
                         } else {
                             layers[0].addTo(mymap);
+                            visibleLayers.push(layers[0]);
                         }
 
                     } else {
@@ -285,14 +294,15 @@ angular.module('LEDApp')
                         self.layer.addTo(mymap);
                         layers[0].addTo(mymap);
 
+                        visibleLayers.push(self.layer);
+                        visibleLayers.push(layers[0]);
+
                         mymap.on('click', function (e) {
                             onClick(e.originalEvent);
                         });
                     }
 
                     self.layers = layers;
-                    cachedTimePeriod = timePeriod;
-                    cachedZoomLevel = zoomLevel;
 
                     // var currentLayerGroup = L.layerGroup(self.currentOverlay);
                     //addTo(mymap).setOpacity(1);
