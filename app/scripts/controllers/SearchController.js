@@ -4,7 +4,12 @@ angular.module('LEDApp')
     .controller('SearchController', function(SearchService, $scope, $compile){
         var self = this;
         this.hasSearched = false;
-        var timePeriod;
+        var cachedTimePeriod;
+        var cachedZoomLevel;
+        self.bands = null;
+
+        var cachedImages = [];
+        var cachedSubjects = [];
 
         self.currentOverlay = [];
         self.bandLayer = 0;
@@ -16,8 +21,12 @@ angular.module('LEDApp')
         var mymap = L.map('mapid').setView([-34.6, 148.33], 9);
 
         mymap.on('zoomend', function(){
-            self.performQueryLimitTime();
+            self.performQueryLimitTime(cachedTimePeriod);
         });
+
+        mymap.on('moveend', function(){
+            self.onMoveMap(cachedZoomLevel, cachedTimePeriod);
+        })
 
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
@@ -82,18 +91,18 @@ angular.module('LEDApp')
 
         // method that we will use to update the control based on feature properties passed
         /*graph.update = function (props) {
-            if (props !== undefined) {
-                var div = L.DomUtil.create('div');
-                var container = L.DomUtil.create('div','',div);
-                container.setAttribute('ng-include','\'views/charts/timeSeries.html\'');
+         if (props !== undefined) {
+         var div = L.DomUtil.create('div');
+         var container = L.DomUtil.create('div','',div);
+         container.setAttribute('ng-include','\'views/charts/timeSeries.html\'');
 
-                var newScope = $scope.$new();
-                $compile(div)(newScope);
-                console.log("Compiled");
-            } else {
-                this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
-            }
-        };*/
+         var newScope = $scope.$new();
+         $compile(div)(newScope);
+         console.log("Compiled");
+         } else {
+         this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
+         }
+         };*/
 
         graph.addTo(mymap);
 
@@ -136,10 +145,11 @@ angular.module('LEDApp')
             for (i in options){
                 self.dict[(moment(options[i]).format("DD/MM/YY, h:mm:ss a"))] = options[i];
                 self.display.push(moment(options[i]).format("DD/MM/YY, h:mm:ss a"));
-                timePeriod = options[i];
+                //cachedTimePeriod = options[i];
             }
 
-            self.performQueryLimitTime();
+            if(options.length > 0)
+                self.performQueryLimitTime(options[options.length-1]);
 
             //Slider config with callbacks
             $scope.sliderDate = {
@@ -156,9 +166,8 @@ angular.module('LEDApp')
                     },
                     onEnd: function () {
                         //TODO: Only update if end date is different
-                        if (timePeriod !== self.dict[$scope.sliderDate.value]) {
-                            timePeriod = self.dict[self.display[$scope.sliderDate.value]];
-                            self.performQueryLimitTime();
+                        if (cachedTimePeriod !== self.dict[$scope.sliderDate.value]) {
+                            self.performQueryLimitTime(self.dict[self.display[$scope.sliderDate.value]]);
                         }
                     }
                 }
@@ -166,8 +175,6 @@ angular.module('LEDApp')
 
             //$scope.$broadcast('rzSliderForceRender');
         });
-
-
 
         // Add new overlay
         var updateFunction = function(e) {
@@ -183,38 +190,48 @@ angular.module('LEDApp')
             $scope.$broadcast('onSelectRegion', e.dggsCell.value, e.band.value);
         };
 
-        self.performQueryLimitTime = function(){
-            SearchService.getDistinctBands().then(function (bands){
-                var images = [];
+        self.performQueryLimitTime = function(timePeriod){
+            SearchService.getDistinctBands().then(function (bands) {
+                cachedImages = [];
+                cachedSubjects = [];
+
                 self.bands = bands;
 
-                for(var x in bands){
+                for (var x in bands) {
                     x.toString();
-                    images.push([]);
+                    cachedImages.push([]);
+                    cachedSubjects.push([]);
                 }
 
                 var zoomLevel = mymap.getZoom() - 5;
+                self.onMoveMap(zoomLevel, timePeriod);
+            });
+        };
 
+        self.onMoveMap = function(zoomLevel, timePeriod){
+            if(self.bands == null){
+                self.performQueryLimitTime(timePeriod);
+            } else {
                 SearchService.performQueryLimitTime(zoomLevel, timePeriod).then(function (data) {
                     // Read new observations
 
                     var observations = data.results.bindings;
-                    if(self.imageDict == null){
+                    if (self.imageDict == null) {
                         self.imageDict = [];
                     }
 
                     // Clear current overlay
-                    for (var i in self.currentOverlay){
+                    for (var i in self.currentOverlay) {
                         mymap.removeLayer(self.currentOverlay[i]);
                     }
 
                     self.currentOverlay = [];
 
-                    var onClick = function(e){
+                    var onClick = function (e) {
                         updateFunction(self.imageDict[e.target.src]);
                     };
 
-                    for (i in observations){
+                    for (i in observations) {
 
                         self.imageDict[observations[i].value.value] = observations[i];
 
@@ -225,28 +242,32 @@ angular.module('LEDApp')
                         //L.DomEvent.on(overlay._image, 'click', onClick);
 
                         self.currentOverlay.push(overlay);
-                        images[Number(observations[i].band.value)].push(overlay);
+
+                        if (!(observations[i].subject.value in cachedSubjects)) {
+                            cachedImages[Number(observations[i].band.value)].push(overlay);
+                            cachedSubjects[Number(observations[i].band.value)].push(observations[i].subject.value);
+                        }
 
                         //mymap.panTo(coords[0]);
                     }
 
                     var layers = {};
 
-                    for(i in bands){
-                        layers[i] = L.featureGroup(images[i]);
+                    for (i in self.bands) {
+                        layers[i] = L.featureGroup(cachedImages[i]);
                     }
 
-                    if(self.layer != null && self.layers != null){
-                        for(var l in self.layers){
+                    if (self.layer != null && self.layers != null) {
+                        for (var l in self.layers) {
                             self.layer.removeLayer(self.layers[l]);
                         }
 
-                        for(l in layers){
+                        for (l in layers) {
                             self.layer.addBaseLayer(layers[l], l);
                         }
 
                         //Make a layer visible
-                        if(self.bandLayer < layers.length){
+                        if (self.bandLayer < layers.length) {
                             layers[self.bandLayer].addTo(mymap);
                         } else {
                             layers[0].addTo(mymap);
@@ -254,27 +275,29 @@ angular.module('LEDApp')
 
                     } else {
                         self.layer = L.control.layers(layers, null);
-                        mymap.on('baselayerchange', function(e){
+                        mymap.on('baselayerchange', function (e) {
                             self.bandLayer = Number(e.name);
-                            e.layer.on('click', function() { console.log('Clicked on a group!'); });
+                            e.layer.on('click', function () {
+                                console.log('Clicked on a group!');
+                            });
                         });
 
                         self.layer.addTo(mymap);
                         layers[0].addTo(mymap);
 
-                        mymap.on('click', function(e) {
+                        mymap.on('click', function (e) {
                             onClick(e.originalEvent);
                         });
                     }
 
                     self.layers = layers;
-
+                    cachedTimePeriod = timePeriod;
+                    cachedZoomLevel = zoomLevel;
 
                     // var currentLayerGroup = L.layerGroup(self.currentOverlay);
                     //addTo(mymap).setOpacity(1);
                     //
                 });
-            });
-
-        };
+            }
+        }
     });
