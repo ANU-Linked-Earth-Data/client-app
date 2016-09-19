@@ -133,6 +133,7 @@ angular.module('LEDApp')
             ];
         }
 
+        mymap.spin(true);
         //Slider config with steps as the distinct datestamps of the observations
         SearchService.getDistinctTime().then(function (data) {
             var options = [];
@@ -174,6 +175,7 @@ angular.module('LEDApp')
                 }
             };
 
+            mymap.spin(false);
             //$scope.$broadcast('rzSliderForceRender');
         });
 
@@ -195,6 +197,7 @@ angular.module('LEDApp')
             cachedTimePeriod = timePeriod;
             cachedZoomLevel = zoomLevel;
 
+            mymap.spin(true);
             SearchService.getDistinctBands().then(function (bands) {
                 cachedImages = [];
                 cachedSubjects = [];
@@ -208,6 +211,7 @@ angular.module('LEDApp')
                 }
 
                 self.onMoveMap(zoomLevel, timePeriod);
+                mymap.spin(false);
             });
         };
 
@@ -215,6 +219,7 @@ angular.module('LEDApp')
             if(self.bands == null){
                 self.performQueryLimitTime(zoomLevel, timePeriod);
             } else {
+                mymap.spin(true);
                 SearchService.performQueryLimitTime(zoomLevel, timePeriod).then(function (data) {
                     // Read new observations
 
@@ -307,6 +312,8 @@ angular.module('LEDApp')
                     // var currentLayerGroup = L.layerGroup(self.currentOverlay);
                     //addTo(mymap).setOpacity(1);
                     //
+
+                    mymap.spin(false);
                 });
             }
         }
