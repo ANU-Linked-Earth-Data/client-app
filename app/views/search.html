@@ -25,10 +25,79 @@
     </div>
 </div>
 
-<leaflet id="mapid" center="mapCenter" controls="mapControls" layers="layers" defaults="defaults" ></leaflet>
+<div id="sidebar" class="sidebar collapsed">
+    <!-- Nav tabs -->
+    <div class="sidebar-tabs">
+        <ul role="tablist">
+            <li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
+            <li><a href="#info" role="tab"><i class="fa fa-info-circle" aria-hidden="true"></i></a></li>
+            <li><a href="#chart" role="tab"><i class="fa fa-bar-chart" aria-hidden="true"></i></a></li>
+            <li><a href="#code" role="tab"><i class="fa fa-code" aria-hidden="true"></i></a></li>
+        </ul>
 
-<aside id="sidebar">
-    <section id="widget_1"></section>
-    <section id="widget_2"></section>
-    <section id="widget_3"></section>
-</aside>
+        <ul role="tablist">
+            <li><a href="#settings" role="tab"><i class="fa fa-gear"></i></a></li>
+        </ul>
+    </div>
+
+    <!-- Tab panes -->
+    <div class="sidebar-content">
+        <div class="sidebar-pane" id="home">
+            <h1 class="sidebar-header">
+                Project Description
+                <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+            </h1>
+
+            <p>TODO: Replace this area with description of project</p>
+
+        </div>
+
+        <div class="sidebar-pane" id="info">
+            <h1 class="sidebar-header">Tile Details<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+
+            <p>No tile selected</p>
+        </div>
+
+        <div class="sidebar-pane" id="chart">
+            <h1 class="sidebar-header">Historical Values<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+
+            <p>No tile selected</p>
+        </div>
+
+        <div class="sidebar-pane" id="code">
+            <h1 class="sidebar-header">Raw JSON<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+
+            <p>No tile selected</p>
+        </div>
+
+        <div class="sidebar-pane" id="settings">
+            <h1 class="sidebar-header">Settings<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+
+            <div ng-show="show_settings_error_message" class="alert alert-danger" role="alert">{{settings_error_message}}</div>
+
+            <b>Band Selection:</b>
+
+            <li ng-hide="bandList.length">No Bands available</li>
+
+            <div ng-repeat="band in bandList" band-colorpicker="{{band}}">
+                <input
+                    type="checkbox"
+                    name="selectedBands[]"
+                    value="{{band.name}}"
+                    ng-model="band.selected"
+                > Band: {{band.name}}
+                <color-picker ng-model="band.color" options="color_picker_options"></color-picker>
+            </div>
+
+            <hr>
+
+            <pre>{{selectedBands()|json}}</pre>
+
+            <button class="btn btn-primary" ng-click="onSettingSave()">Save</button>
+        </div>
+    </div>
+</div>
+
+<canvas id="invisible-canvas" ng-hide="true"></canvas>
+
+<div id="mapid" center="mapCenter" controls="mapControls" layers="layers" defaults="defaults" ></div>

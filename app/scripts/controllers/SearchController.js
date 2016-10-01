@@ -1,7 +1,8 @@
 'use strict';
 
 angular.module('LEDApp')
-    .controller('SearchController', function(SearchService, $scope, $compile){
+    .controller('SearchController', function(SearchService, $scope, $compile, filterFilter)
+    {
         var self = this;
         this.hasSearched = false;
         var cachedTimePeriod;
@@ -15,11 +16,23 @@ angular.module('LEDApp')
         self.currentOverlay = [];
         self.bandLayer = 0;
 
+        $scope.color_picker_options = {
+            format: 'hex'
+        };
+
+        $scope.bandList = [];
+        $scope.selected_bands = [];
+        self.savedSelectedBands = [];
+
         var defaultDggsLevel = 5;
 
         //$scope.selectGeolocation = null;
 
-        var mymap = L.map('mapid').setView([-34.6, 148.33], 9);
+        var mymap = L.map('mapid',{
+            zoomControl: true
+        }).setView([-34.6, 148.33], 9);
+
+        mymap.zoomControl.setPosition('topright');
 
         mymap.on('zoomend', function(){
             self.performQueryLimitTime(mymap.getZoom()-5, cachedTimePeriod);
@@ -35,6 +48,8 @@ angular.module('LEDApp')
             id: 'duo.034p8op4',
             accessToken: 'pk.eyJ1IjoiZHVvIiwiYSI6ImNpbm52Y2lxdzB6emZ0dmx5MmNmNGZnejMifQ._yO4cALvQUPwvtVj_nUYEA'
         }).addTo(mymap);
+
+        var sidebar = L.control.sidebar('sidebar').addTo(mymap);
 
         // Custom on hover info
         var info = L.control({position:"topright"});
@@ -150,8 +165,9 @@ angular.module('LEDApp')
                 //cachedTimePeriod = options[i];
             }
 
-            if(options.length > 0)
-                self.performQueryLimitTime(mymap.getZoom()-5, options[options.length-1]);
+            if(options.length > 0) {
+                self.performQueryLimitTime(mymap.getZoom() - 5, options[options.length - 1]);
+            }
 
             //Slider config with callbacks
             $scope.sliderDate = {
@@ -181,15 +197,15 @@ angular.module('LEDApp')
 
         // Add new overlay
         var updateFunction = function(e) {
-            if(e==null)
+            if(e===null) {
                 return;
+            }
 
             info.update(e);
 
             //$scope.coord.lat = Number(imageDict[e.target.src].lat.value);
             //$scope.coord.lon = Number(imageDict[e.target.src].lon.value);
 
-            console.log(e.dggsCell.value);
             $scope.$broadcast('onSelectRegion', e.dggsCell.value, e.band.value);
         };
 
@@ -205,15 +221,33 @@ angular.module('LEDApp')
                 self.bands = bands;
 
                 for (var x in bands) {
-                    x.toString();
                     cachedImages.push([]);
                     cachedSubjects.push([]);
+                    $scope.bandList.push({name: x.toString(), color:"#FF0000", selected:false});
+
                 }
+
+                self.setDefaultSettings($scope.bandList);
 
                 self.onMoveMap(zoomLevel, timePeriod);
                 mymap.spin(false);
             });
         };
+
+        $scope.selectedBands = function selectedBands() {
+            return filterFilter($scope.bandList, { selected: true });
+        };
+
+        self.getBand = function(b){
+            return filterFilter($scope.selected_bands, { name: b });
+        };
+
+        $scope.$watch('bandList|filter:{selected:true}', function (nv) {
+            $scope.selection = nv.map(function (band) {
+                return band.name;
+            });
+        }, true);
+
 
         self.onMoveMap = function(zoomLevel, timePeriod){
             if(self.bands == null){
@@ -246,9 +280,19 @@ angular.module('LEDApp')
                     for (i in observations) {
 
                         self.imageDict[observations[i].value.value] = observations[i];
+                        // console.log(observations[i].value.value);
+                        var img = null;
+
+                        Caman("#invisible-canvas", observations[i].value.value, function(){
+                            //console.log("Recoloring image to: ");
+                            //console.log(self.getBand(observations[i].band.value)[0].color);
+                            this.colorize(self.getBand(observations[i].band.value)[0].color, 20).render();
+                        });
+
+                        img = document.getElementById('invisible-canvas').toDataURL();
 
                         var coords = getBoundingCorners(String(observations[i].geoSparql.value));
-                        var overlay = new L.imageOverlay(observations[i].value.value, coords, {interactive: true});
+                        var overlay = new L.imageOverlay(img.toString(), coords, {interactive: true});
 
                         //overlay.on('click', onClick);
                         //L.DomEvent.on(overlay._image, 'click', onClick);
@@ -291,9 +335,6 @@ angular.module('LEDApp')
                         self.layer = L.control.layers(layers, null);
                         mymap.on('baselayerchange', function (e) {
                             self.bandLayer = Number(e.name);
-                            e.layer.on('click', function () {
-                                console.log('Clicked on a group!');
-                            });
                         });
 
                         self.layer.addTo(mymap);
@@ -316,5 +357,39 @@ angular.module('LEDApp')
                     mymap.spin(false);
                 });
             }
-        }
+        };
+
+        $scope.onSettingSave = function(){
+            if($scope.selectedBands().length == 0){
+                $scope.show_settings_error_message = true;
+                $scope.settings_error_message = "Error: Must select at least one band to display";
+            } else {
+                $scope.show_settings_error_message = false;
+                $scope.selected_bands = $scope.selectedBands();
+                console.log("Selected bands: " + $scope.selected_bands);
+            }
+        };
+
+        self.setDefaultSettings = function(bands){
+            //Band color settings
+            for(var x in bands){
+                $scope.selected_bands.push(bands[x]);
+            }
+        };
     });
+
+
+/*.directive('band-colorpicker', function() {
+ return {
+ restrict: "AEC",
+ //templateUrl: 'app/views/sidebar/bandCheckBox.html', // where myDirective binds to scope.myDirective
+ template: '<div class="checkbox"> <label> <input type="checkbox"> {{band.name}} </label> <div id={{band.name}} class="input-group colorpicker-component"> <input type="text" value="#00AABB" class="form-control"/> <span class="input-group-addon"><i></i> </span> </div> </div>',
+ scope: {
+ band: '='
+ },
+ link: function (scope, element, attrs) {
+ console.log('Do action with data', scope.band);
+ console.log('Do action with data', element.innerHTML());
+ }
+ };
+ });*/

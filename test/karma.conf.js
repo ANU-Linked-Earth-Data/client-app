@@ -35,6 +35,12 @@ module.exports = function(config) {
       'bower_components/angular-chart.js/dist/angular-chart.js',
       'bower_components/spin.js/spin.js',
       'bower_components/leaflet-spin/leaflet.spin.js',
+      'bower_components/sidebar-v2/js/jquery-sidebar.js',
+      'bower_components/sidebar-v2/js/leaflet-sidebar.js',
+      'bower_components/tinycolor/tinycolor.js',
+      'bower_components/angular-color-picker/dist/angularjs-color-picker.js',
+      'bower_components/caman/dist/caman.min.js',
+      'bower_components/caman/dist/caman.full.min.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',

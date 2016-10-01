@@ -102,6 +102,16 @@ a:hover {
     right: 0;
 }
 
+@media (min-width: 768px) {
+    .sidebar {
+        top: 80px;
+    }
+}
+
+.sidebar {
+    top: 70px;
+}
+
 .datepickerdemoBasicUsage {
     /** Demo styles for mdCalendar. */ }
 .datepickerdemoBasicUsage md-content {
