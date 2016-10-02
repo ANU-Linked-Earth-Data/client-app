@@ -67,7 +67,7 @@
         <div class="sidebar-pane" id="code">
             <h1 class="sidebar-header">Raw JSON<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
 
-            <p>No tile selected</p>
+            <pre>{{jsonVals|json}}</pre>
         </div>
 
         <div class="sidebar-pane" id="settings">
@@ -91,13 +91,13 @@
 
             <hr>
 
-            <pre>{{selectedBands()|json}}</pre>
+            <!--<pre>{{selectedBands()|json}}</pre>-->
 
             <button class="btn btn-primary" ng-click="onSettingSave()">Save</button>
         </div>
     </div>
 </div>
 
-<canvas id="invisible-canvas" ng-hide="true"></canvas>
+<canvas id="invisibleCanvas" ng-hide="true"></canvas>
 
 <div id="mapid" center="mapCenter" controls="mapControls" layers="layers" defaults="defaults" ></div>

@@ -11,10 +11,11 @@ angular.module('LEDApp')
 
         var cachedImages = [];
         var cachedSubjects = [];
-        var visibleLayers = [];
 
         self.currentOverlay = [];
+        self.imageDict = [];
         self.bandLayer = 0;
+        self.addedListener = false;
 
         $scope.color_picker_options = {
             format: 'hex'
@@ -41,6 +42,12 @@ angular.module('LEDApp')
         mymap.on('moveend', function(){
             self.onMoveMap(cachedZoomLevel, cachedTimePeriod);
         });
+
+        mymap.on('click', function (e) {
+            console.log(e.originalEvent);
+            self.onClick(e.originalEvent);
+        });
+
 
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
@@ -132,10 +139,6 @@ angular.module('LEDApp')
              }*/
         };
 
-        self.getMessage = function() {
-
-        };
-
         /*  Get the top left and bottom right corners of polygon definition:
          e.g POLYGON(-35.368 149.016, -35.384 149.016, -35.384 149.032, -35.368 149.032, -35.368 149.016) -> [[-35.368, 149.016], [-35.384, 149.032]]
          */
@@ -147,6 +150,7 @@ angular.module('LEDApp')
                 corners[2].match(/-?\d+.?\d*/g).reverse()
             ];
         }
+
 
         mymap.spin(true);
         //Slider config with steps as the distinct datestamps of the observations
@@ -248,6 +252,77 @@ angular.module('LEDApp')
             });
         }, true);
 
+        self.onClick = function(e){
+            updateFunction(e);
+        };
+
+        self.loadImage = function(colouredImages, observations){
+            console.log("Loading images");
+
+            var opacity = 1/$scope.selected_bands.length;
+
+            console.log("Opacity: ", opacity);
+
+            // Clear current overlay
+            for (i in self.currentOverlay) {
+                mymap.removeLayer(self.currentOverlay[i]);
+            }
+
+            self.currentOverlay = [];
+
+            for(var i in colouredImages){
+                var coords = getBoundingCorners(String(self.imageDict[colouredImages[i]].geoSparql.value));
+                var overlay = new L.imageOverlay(colouredImages[i], coords, {interactive: true, opacity: opacity});
+                //var overlay = new L.imageOverlay(observations[i].value.value, coords, {interactive: true, opacity: opacity});
+
+                self.currentOverlay.push(overlay);
+                overlay.addTo(mymap);
+            }
+
+            mymap.spin(false);
+        };
+
+        self.colorizeImage = function(tiles, i, colouredImages){
+            if(tiles.length > 0) {
+                var tile = tiles.pop();
+                var val = self.getBand(tiles[i].band.value)[0];
+
+                if(val != null) {
+                    $("#invisibleCanvas").removeAttr("data-caman-id");
+
+                    return Caman("#invisibleCanvas", observations[i].value.value, function () {
+                        console.log("Colorizing: " + i);
+
+                        this.colorize(val.color, 50);
+                        this.render(function () {
+                            colouredImages.push(document.getElementById('invisibleCanvas').toDataURL());
+                            self.imageDict[observations[i].value.value] = observations[i];
+                            self.imageDict[colouredImages[i]] = observations[i];
+
+                            i++;
+
+                            if (i >= observations.length) {
+                                self.loadImage(colouredImages, observations);
+                                i = 0;
+                            } else {
+                                self.colorizeImage(observations, i, colouredImages);
+                            }
+                        });
+                    });
+                } else {
+                    i++;
+
+                    if (i >= observations.length) {
+                        self.loadImage(colouredImages, observations);
+                        i = 0;
+                    } else {
+                        self.colorizeImage(observations, i, colouredImages);
+                    }
+                }
+            } else {
+                console.log("Can't colorize: tiles array empty");
+            }
+        };
 
         self.onMoveMap = function(zoomLevel, timePeriod){
             if(self.bands == null){
@@ -256,105 +331,27 @@ angular.module('LEDApp')
                 mymap.spin(true);
                 SearchService.performQueryLimitTime(zoomLevel, timePeriod).then(function (data) {
                     // Read new observations
-
                     var observations = data.results.bindings;
-                    if (self.imageDict == null) {
-                        self.imageDict = [];
-                    }
+                    $scope.jsonVals = observations;
 
-                    // Clear current overlay
-                    for (var i in self.currentOverlay) {
-                        mymap.removeLayer(self.currentOverlay[i]);
-                    }
+                    var i = 0;
+                    var colouredImages = [];
 
-                    while(visibleLayers.length != 0){
-                        mymap.removeLayer(visibleLayers.pop());
-                    }
+                    var tiles = [];
 
-                    self.currentOverlay = [];
-
-                    var onClick = function (e) {
-                        updateFunction(self.imageDict[e.target.src]);
-                    };
-
-                    for (i in observations) {
-
-                        self.imageDict[observations[i].value.value] = observations[i];
-                        // console.log(observations[i].value.value);
-                        var img = null;
-
-                        Caman("#invisible-canvas", observations[i].value.value, function(){
-                            //console.log("Recoloring image to: ");
-                            //console.log(self.getBand(observations[i].band.value)[0].color);
-                            this.colorize(self.getBand(observations[i].band.value)[0].color, 20).render();
-                        });
-
-                        img = document.getElementById('invisible-canvas').toDataURL();
-
-                        var coords = getBoundingCorners(String(observations[i].geoSparql.value));
-                        var overlay = new L.imageOverlay(img.toString(), coords, {interactive: true});
-
-                        //overlay.on('click', onClick);
-                        //L.DomEvent.on(overlay._image, 'click', onClick);
-
-                        self.currentOverlay.push(overlay);
-
-                        if (!(observations[i].subject.value in cachedSubjects)) {
-                            cachedImages[Number(observations[i].band.value)].push(overlay);
-                            cachedSubjects[Number(observations[i].band.value)].push(observations[i].subject.value);
-                        }
-
-                        //mymap.panTo(coords[0]);
-                    }
-
-                    var layers = {};
-
-                    for (i in self.bands) {
-                        layers[i] = L.featureGroup(cachedImages[i]);
-                    }
-
-                    if (self.layer != null && self.layers != null) {
-                        for (var l in self.layers) {
-                            self.layer.removeLayer(self.layers[l]);
-                        }
-
-                        for (l in layers) {
-                            self.layer.addBaseLayer(layers[l], l);
-                        }
-
-                        //Make a layer visible
-                        if (self.bandLayer < layers.length) {
-                            layers[self.bandLayer].addTo(mymap);
-                            visibleLayers.push(layers[self.bandLayer]);
+                    //Group observations by tile
+                    for(var i in observations){
+                        var observation = observations[i];
+                        if(observation.dggsTile.value in tiles){
+                            if(!observation in tiles[observation.dggsTile.value]) {
+                                tiles[observation.dggsTile.value].push(observation)
+                            }
                         } else {
-                            layers[0].addTo(mymap);
-                            visibleLayers.push(layers[0]);
+                            tiles[observation.dggsTile.value] = [observation];
                         }
-
-                    } else {
-                        self.layer = L.control.layers(layers, null);
-                        mymap.on('baselayerchange', function (e) {
-                            self.bandLayer = Number(e.name);
-                        });
-
-                        self.layer.addTo(mymap);
-                        layers[0].addTo(mymap);
-
-                        visibleLayers.push(self.layer);
-                        visibleLayers.push(layers[0]);
-
-                        mymap.on('click', function (e) {
-                            onClick(e.originalEvent);
-                        });
                     }
 
-                    self.layers = layers;
-
-                    // var currentLayerGroup = L.layerGroup(self.currentOverlay);
-                    //addTo(mymap).setOpacity(1);
-                    //
-
-                    mymap.spin(false);
+                    var c = self.colorizeImage(tiles,i,colouredImages);
                 });
             }
         };
@@ -372,9 +369,16 @@ angular.module('LEDApp')
 
         self.setDefaultSettings = function(bands){
             //Band color settings
-            for(var x in bands){
-                $scope.selected_bands.push(bands[x]);
+            for(var i=0; i<3; i++){
+                $scope.selected_bands.push(bands[i]);
             }
+
+            $scope.selected_bands[0].color = "#0000ff";
+            $scope.selected_bands[0].selected = true;
+            $scope.selected_bands[1].color = "#00ff00";
+            $scope.selected_bands[1].selected = true;
+            $scope.selected_bands[2].color = "#ff0000";
+            $scope.selected_bands[2].selected = true;
         };
     });
 
