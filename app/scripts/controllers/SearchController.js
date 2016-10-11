@@ -256,12 +256,28 @@ angular.module('LEDApp')
             updateFunction(e);
         };
 
-        self.loadImage = function(colouredImages, observations){
+        Caman.Filter.register("color", function (hue) {
+
+            // Our process function that will be called for each pixel.
+            // Note that we pass the name of the filter as the first argument.
+            this.process("color", function (rgba) {
+                var lum = rgba.r/255.0;
+
+                var col = hsl2rgb(hue, 1, lum);
+
+                rgba.r = col.r;
+                rgba.g = col.g;
+                rgba.b = col.b;
+
+                // Return the modified RGB values
+                return rgba;
+            });
+        });
+
+        self.loadImage = function(colouredImages){
             console.log("Loading images");
 
             var opacity = 1/$scope.selected_bands.length;
-
-            console.log("Opacity: ", opacity);
 
             // Clear current overlay
             for (i in self.currentOverlay) {
@@ -271,7 +287,7 @@ angular.module('LEDApp')
             self.currentOverlay = [];
 
             for(var i in colouredImages){
-                var coords = getBoundingCorners(String(self.imageDict[colouredImages[i]].geoSparql.value));
+                var coords = getBoundingCorners(String(self.imageDict[colouredImages[i]][0].geoSparql.value));
                 var overlay = new L.imageOverlay(colouredImages[i], coords, {interactive: true, opacity: opacity});
                 //var overlay = new L.imageOverlay(observations[i].value.value, coords, {interactive: true, opacity: opacity});
 
@@ -282,46 +298,86 @@ angular.module('LEDApp')
             mymap.spin(false);
         };
 
-        self.colorizeImage = function(tiles, i, colouredImages){
-            if(tiles.length > 0) {
-                var tile = tiles.pop();
-                var val = self.getBand(tiles[i].band.value)[0];
-
-                if(val != null) {
-                    $("#invisibleCanvas").removeAttr("data-caman-id");
-
-                    return Caman("#invisibleCanvas", observations[i].value.value, function () {
-                        console.log("Colorizing: " + i);
-
-                        this.colorize(val.color, 50);
-                        this.render(function () {
-                            colouredImages.push(document.getElementById('invisibleCanvas').toDataURL());
-                            self.imageDict[observations[i].value.value] = observations[i];
-                            self.imageDict[colouredImages[i]] = observations[i];
-
-                            i++;
-
-                            if (i >= observations.length) {
-                                self.loadImage(colouredImages, observations);
-                                i = 0;
-                            } else {
-                                self.colorizeImage(observations, i, colouredImages);
-                            }
-                        });
-                    });
-                } else {
-                    i++;
-
-                    if (i >= observations.length) {
-                        self.loadImage(colouredImages, observations);
-                        i = 0;
-                    } else {
-                        self.colorizeImage(observations, i, colouredImages);
-                    }
-                }
-            } else {
-                console.log("Can't colorize: tiles array empty");
+        self.colorizeImage = function(tiles){
+            // Clear current overlay
+            for (var i in self.currentOverlay) {
+                mymap.removeLayer(self.currentOverlay[i]);
             }
+
+            self.currentOverlay = [];
+
+            return Caman("#invisibleCanvas", tiles[0][0].value.value, function(){
+            //return Caman("#invisibleCanvas", function(){
+                var caman = this;
+                caman.DEBUG = true;
+
+                /*this.fillColor(0, 0, 0);
+                var hue = tinycolor("#00FF00").toHsv().h;
+                //hue = (hue*100)/360;
+                console.log("Applying hue ", hue);
+                //this.hue(hue);
+                //this.colorize("#FF0000", 25);
+                //this.saturation(100);
+                this.color(hue);*/
+
+                var renderTile = function(tiles){
+                    if(tiles.length > 0){
+                        var tile = tiles.pop();
+
+                        renderImage(tile, tile[0].geoSparql.value);
+                    }
+                };
+
+                var renderImage = function(tile, bound){
+                    if(tile.length > 0) {
+                        var image = tile.pop();
+                        var band = self.getBand(image.band.value)[0];
+
+                        if (band != null) {
+                            //console.log("new image layer on band ", image.band.value);
+
+                            caman.newLayer(function () {
+                                this.setBlendingMode("addition");
+                                console.log("Adding new layer to ", caman);
+                                this.overlayImage(image.value.value);
+                                console.log("overlaying image ", image.value.value);
+                                var hue = tinycolor(band.color).toHsv().h;
+                                //hue = (hue*100)/360;
+                                console.log("Applying hue ", hue);
+                                /*this.filter.hue(hue);*/
+                                //this.filter.colorize(band.color, 5);
+                                this.filter.color(hue);
+
+                                renderImage(tile, bound);
+                            });
+                        } else {
+                            //console.log("Val is null. Band is ", image.band.value);
+                            renderImage(tile, bound);
+                        }
+                    } else {
+                        console.log("Rendering Image");
+                        caman.render(function () {
+                            console.log("Rendered Image");
+                            var png = document.getElementById('invisibleCanvas').toDataURL();
+                            var opacity = 1/$scope.selected_bands.length;
+
+                            console.log(png);
+                            self.imageDict[png] = tile;
+
+                            var coords = getBoundingCorners(String(bound));
+                            var overlay = new L.imageOverlay(png, coords, {interactive: true, opacity: 1});
+                            //var overlay = new L.imageOverlay(observations[i].value.value, coords, {interactive: true, opacity: opacity});
+
+                            self.currentOverlay.push(overlay);
+                            overlay.addTo(mymap);
+
+                            renderTile(tiles);
+                        });
+                    }
+                };
+
+                renderTile(tiles);
+            });
         };
 
         self.onMoveMap = function(zoomLevel, timePeriod){
@@ -334,24 +390,26 @@ angular.module('LEDApp')
                     var observations = data.results.bindings;
                     $scope.jsonVals = observations;
 
-                    var i = 0;
-                    var colouredImages = [];
-
                     var tiles = [];
+                    var tileLocations = [];
 
                     //Group observations by tile
                     for(var i in observations){
                         var observation = observations[i];
-                        if(observation.dggsTile.value in tiles){
-                            if(!observation in tiles[observation.dggsTile.value]) {
-                                tiles[observation.dggsTile.value].push(observation)
+                        var dggsCell = observation.dggsCell.value.toString();
+
+                        if(tileLocations.indexOf(dggsCell) >= 0){
+                            if(tiles[tileLocations.indexOf(dggsCell)].indexOf(observation) < 0) {
+                                tiles[tileLocations.indexOf(dggsCell)].push(observation)
                             }
                         } else {
-                            tiles[observation.dggsTile.value] = [observation];
+                            tiles.push([observation]);
+                            tileLocations.push(dggsCell);
                         }
                     }
 
-                    var c = self.colorizeImage(tiles,i,colouredImages);
+                    self.colorizeImage(tiles);
+                    mymap.spin(false);
                 });
             }
         };
@@ -379,6 +437,38 @@ angular.module('LEDApp')
             $scope.selected_bands[1].selected = true;
             $scope.selected_bands[2].color = "#ff0000";
             $scope.selected_bands[2].selected = true;
+        };
+
+        var hue2rgb = function(p, q, t) {
+            if (t < 0) t++;
+            if (t > 1) t--;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+
+        var hsl2rgb = function(h, s, l) {
+
+            var r, g, b, q, p;
+
+            h /= 360;
+
+            if (s == 0) {
+                r = g = b = l;
+            } else {
+                q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                p = 2 * l - q;
+
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+
+            return {
+                r: r * 255,
+                g: g * 255,
+                b: b * 255};
         };
     });
 
