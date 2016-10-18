@@ -55,13 +55,25 @@
         <div class="sidebar-pane" id="info">
             <h1 class="sidebar-header">Tile Details<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
 
-            <p>No tile selected</p>
+            <p ng-show="clickedImage == null">No tile selected</p>
+
+            <div ng-hide="clickedImage == null">
+                <a href="{{clickedImage.subject.value}}">Link</a>
+                <p>Pixel: {{clickedImage.dggsLevelPixel.value}}</p>
+                <p>Square: {{clickedImage.dggsLevelSquare.value}}</p>
+                <p>Resolution: {{clickedImage.resolution.value}}</p>
+                <p>Location: ({{clickedImage.lat}},{{clickedImage.lon}})</p>
+            </div>
         </div>
 
         <div class="sidebar-pane" id="chart">
             <h1 class="sidebar-header">Historical Values<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
 
-            <p>No tile selected</p>
+            <p ng-show="clickedImage == null">No tile selected</p>
+
+            <div ng-hide="clickedImage == null">
+
+            </div>
         </div>
 
         <div class="sidebar-pane" id="code">
@@ -97,7 +109,5 @@
         </div>
     </div>
 </div>
-
 <canvas id="invisibleCanvas" ng-hide="true"></canvas>
-
-<div id="mapid" center="mapCenter" controls="mapControls" layers="layers" defaults="defaults" ></div>
+<div id="mapid" center="mapCenter" controls="mapControls" layers="layers" defaults="defaults"></div>

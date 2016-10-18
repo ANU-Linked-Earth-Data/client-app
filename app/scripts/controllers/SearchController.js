@@ -40,12 +40,12 @@ angular.module('LEDApp')
         });
 
         mymap.on('moveend', function(){
-            self.onMoveMap(cachedZoomLevel, cachedTimePeriod);
+            self.refreshOverlay(cachedZoomLevel, cachedTimePeriod);
         });
 
         mymap.on('click', function (e) {
-            console.log(e.originalEvent);
-            self.onClick(e.originalEvent);
+            console.log(self.imageDict[e.originalEvent.srcElement.currentSrc]);
+            self.onClick(self.imageDict[e.originalEvent.srcElement.currentSrc]);
         });
 
 
@@ -57,39 +57,6 @@ angular.module('LEDApp')
         }).addTo(mymap);
 
         var sidebar = L.control.sidebar('sidebar').addTo(mymap);
-
-        // Custom on hover info
-        var info = L.control({position:"topright"});
-
-        info.onAdd = function () {
-            this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-            this.update();
-            return this._div;
-        };
-
-        // method that we will use to update the control based on feature properties passed
-        info.update = function (props) {
-            if (props !== undefined) {
-                var subject = props.subject.value;
-                var lat = Number(props.lat.value);
-                var lon = Number(props.lon.value);
-
-                //console.log("Clicked: \n" + JSON.stringify(props));
-
-                this._div.innerHTML = '<h4>Image Details</h4>';
-                this._div.innerHTML += '<a href="' + subject + '">Link</a>';
-                this._div.innerHTML += '<p>Band:' + props.band.value +'</p>';
-                this._div.innerHTML += '<p>Pixel:' + props.dggsLevelPixel.value +'</p>';
-                this._div.innerHTML += '<p>Square:' + props.dggsLevelSquare.value +'</p>';
-                this._div.innerHTML += '<p>Resolution:' + props.resolution.value +'</p>';
-                this._div.innerHTML += '<p>Location: (' + (Math.round((lat + 0.00001) * 100) / 100) + ', ' + (Math.round((lon + 0.00001) * 100) / 100) + ')</p>';
-
-            } else {
-                this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
-            }
-        };
-
-        info.addTo(mymap);
 
         var graph = L.control({position:"bottomright"});
 
@@ -111,21 +78,6 @@ angular.module('LEDApp')
 
             }
         };
-
-        // method that we will use to update the control based on feature properties passed
-        /*graph.update = function (props) {
-         if (props !== undefined) {
-         var div = L.DomUtil.create('div');
-         var container = L.DomUtil.create('div','',div);
-         container.setAttribute('ng-include','\'views/charts/timeSeries.html\'');
-
-         var newScope = $scope.$new();
-         $compile(div)(newScope);
-         console.log("Compiled");
-         } else {
-         this._div.innerHTML = '<h4>Image Details</h4><p>None Selected</p>';
-         }
-         };*/
 
         graph.addTo(mymap);
 
@@ -205,12 +157,10 @@ angular.module('LEDApp')
                 return;
             }
 
-            info.update(e);
-
             //$scope.coord.lat = Number(imageDict[e.target.src].lat.value);
             //$scope.coord.lon = Number(imageDict[e.target.src].lon.value);
 
-            $scope.$broadcast('onSelectRegion', e.dggsCell.value, e.band.value);
+            //$scope.$broadcast('onSelectRegion', e[0].dggsCell.value, e.band.value);
         };
 
         self.performQueryLimitTime = function(zoomLevel, timePeriod){
@@ -227,13 +177,15 @@ angular.module('LEDApp')
                 for (var x in bands) {
                     cachedImages.push([]);
                     cachedSubjects.push([]);
-                    $scope.bandList.push({name: x.toString(), color:"#FF0000", selected:false});
+                    if(x >= $scope.bandList.length) {
+                        $scope.bandList.push({name: x.toString(), color: "#FF0000", selected: false});
+                    }
 
                 }
 
                 self.setDefaultSettings($scope.bandList);
 
-                self.onMoveMap(zoomLevel, timePeriod);
+                self.refreshOverlay(zoomLevel, timePeriod);
                 mymap.spin(false);
             });
         };
@@ -253,6 +205,15 @@ angular.module('LEDApp')
         }, true);
 
         self.onClick = function(e){
+            var lat = Number(e[0].lat.value);
+            var lon = Number(e[0].lon.value);
+
+            lat = Math.round((lat + 0.00001) * 100) / 100;
+            lon = Math.round((lon + 0.00001) * 100) / 100;
+
+            $scope.clickedImage = e[0];
+            $scope.clickedImage.lat = lat;
+            $scope.clickedImage.lon = lon;
             updateFunction(e);
         };
 
@@ -305,82 +266,121 @@ angular.module('LEDApp')
             }
 
             self.currentOverlay = [];
+            self.coloredTiles = [];
 
-            return Caman("#invisibleCanvas", tiles[0][0].value.value, function(){
-            //return Caman("#invisibleCanvas", function(){
-                var caman = this;
-                caman.DEBUG = true;
+            var canvas = document.getElementById("invisibleCanvas");
+            var img = new Image;
+            var w, h;
+            var ctx = canvas.getContext('2d');
 
-                /*this.fillColor(0, 0, 0);
-                var hue = tinycolor("#00FF00").toHsv().h;
-                //hue = (hue*100)/360;
-                console.log("Applying hue ", hue);
-                //this.hue(hue);
-                //this.colorize("#FF0000", 25);
-                //this.saturation(100);
-                this.color(hue);*/
+            /*tiles.forEach(function (tile, index, arr) {
+                var coloredTile = [];
 
-                var renderTile = function(tiles){
-                    if(tiles.length > 0){
-                        var tile = tiles.pop();
+                tile.forEach(function(obs, i, a){
+                    var image = obs.value.value;
+                    console.log(image);
+                    img.src = image;
 
-                        renderImage(tile, tile[0].geoSparql.value);
+                    img.onload = function() {
+                        w = canvas.width = this.width;
+                        h = canvas.height = this.height;
+
+                        //canvas.parentNode.appendChild(img);
+
+                        update();
                     }
-                };
+                });
+            });*/
+            var x = tiles.length-1;
+            var tile = tiles[x];
 
-                var renderImage = function(tile, bound){
-                    if(tile.length > 0) {
-                        var image = tile.pop();
-                        var band = self.getBand(image.band.value)[0];
+            i = tile.length-1;
 
-                        if (band != null) {
-                            //console.log("new image layer on band ", image.band.value);
+            var coloredImage = [];
 
-                            caman.newLayer(function () {
-                                this.setBlendingMode("addition");
-                                console.log("Adding new layer to ", caman);
-                                this.overlayImage(image.value.value);
-                                console.log("overlaying image ", image.value.value);
-                                var hue = tinycolor(band.color).toHsv().h;
-                                //hue = (hue*100)/360;
-                                console.log("Applying hue ", hue);
-                                /*this.filter.hue(hue);*/
-                                //this.filter.colorize(band.color, 5);
-                                this.filter.color(hue);
+            var color = function(){
+                if(i >= 0) {
+                    var obs = tile[i];
+                    i--;
+                    var image = obs.value.value;
+                    var band = self.getBand(obs.band.value)[0];
 
-                                renderImage(tile, bound);
-                            });
-                        } else {
-                            //console.log("Val is null. Band is ", image.band.value);
-                            renderImage(tile, bound);
-                        }
+                    if(band != null) {
+                        //console.log(image);
+                        img.src = image;
+
+                        img.onload = function () {
+                            w = canvas.width = this.width;
+                            h = canvas.height = this.height;
+
+                            update();
+                            color();
+                        };
                     } else {
-                        console.log("Rendering Image");
-                        caman.render(function () {
-                            console.log("Rendered Image");
-                            var png = document.getElementById('invisibleCanvas').toDataURL();
-                            var opacity = 1/$scope.selected_bands.length;
-
-                            console.log(png);
-                            self.imageDict[png] = tile;
-
-                            var coords = getBoundingCorners(String(bound));
-                            var overlay = new L.imageOverlay(png, coords, {interactive: true, opacity: 1});
-                            //var overlay = new L.imageOverlay(observations[i].value.value, coords, {interactive: true, opacity: opacity});
-
-                            self.currentOverlay.push(overlay);
-                            overlay.addTo(mymap);
-
-                            renderTile(tiles);
-                        });
+                        color();
                     }
-                };
+                } else {
+                    var png = document.getElementById('invisibleCanvas').toDataURL();
 
-                renderTile(tiles);
-            });
+                    self.imageDict[png] = tile;
+
+                    var bound = tile[0].geoSparql.value;
+                    var coords = getBoundingCorners(String(bound));
+                    var overlay = new L.imageOverlay(png, coords, {interactive: true, opacity: 1});
+
+                    self.currentOverlay.push(overlay);
+                    overlay.addTo(mymap);
+
+                    if(x > 0){
+                        tile = tiles[x];
+                        x--;
+                        coloredImage = [];
+
+                        color();
+                    }
+                }
+
+                function update() {
+                    ctx.drawImage(img, 0, 0);
+                    var hue = tinycolor(band.color).toHsv().h;
+
+                    var idata = ctx.getImageData(0, 0, w, h),
+                        data = idata.data,
+                        len = data.length,
+                        i = 0;
+
+                    //console.log("Hue: ", hue);
+
+                    for (; i < len; i += 4) {
+
+                        var lum = data[i] / 255;
+                        var col = hsl2rgb(hue, 1, lum);
+
+                        while(coloredImage.length < idata.data.length){
+                            coloredImage.push(0);
+                        }
+
+                        coloredImage[i] = Math.max(coloredImage[i], col.r);
+                        coloredImage[i+1] = Math.max(coloredImage[i+1], col.g);
+                        coloredImage[i+2] = Math.max(coloredImage[i+2], col.b);
+
+                        data[i] = coloredImage[i];
+                        data[i + 1] = coloredImage[i+1];
+                        data[i + 2] = coloredImage[i+2]
+                    }
+
+                    //idata.data = coloredImage;
+
+                    ctx.putImageData(idata, 0, 0);
+                }
+            };
+
+            color();
+            //return Caman("#invisibleCanvas", tiles[0][0].value.value, function(){
+
         };
 
-        self.onMoveMap = function(zoomLevel, timePeriod){
+        self.refreshOverlay = function(zoomLevel, timePeriod){
             if(self.bands == null){
                 self.performQueryLimitTime(zoomLevel, timePeriod);
             } else {
@@ -422,21 +422,23 @@ angular.module('LEDApp')
                 $scope.show_settings_error_message = false;
                 $scope.selected_bands = $scope.selectedBands();
                 console.log("Selected bands: " + $scope.selected_bands);
+
+                self.refreshOverlay(cachedZoomLevel, cachedTimePeriod);
             }
         };
 
         self.setDefaultSettings = function(bands){
             //Band color settings
-            for(var i=0; i<3; i++){
+            for(var i=$scope.selected_bands.length; i<bands.length; i++){
                 $scope.selected_bands.push(bands[i]);
             }
 
-            $scope.selected_bands[0].color = "#0000ff";
-            $scope.selected_bands[0].selected = true;
-            $scope.selected_bands[1].color = "#00ff00";
-            $scope.selected_bands[1].selected = true;
-            $scope.selected_bands[2].color = "#ff0000";
-            $scope.selected_bands[2].selected = true;
+            $scope.selected_bands[3].color = "#0000ff";
+            $scope.selected_bands[3].selected = true;
+            $scope.selected_bands[4].color = "#00ff00";
+            $scope.selected_bands[4].selected = true;
+            $scope.selected_bands[5].color = "#ff0000";
+            $scope.selected_bands[5].selected = true;
         };
 
         var hue2rgb = function(p, q, t) {
