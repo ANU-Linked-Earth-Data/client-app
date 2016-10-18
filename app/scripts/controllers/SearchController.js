@@ -44,10 +44,8 @@ angular.module('LEDApp')
         });
 
         mymap.on('click', function (e) {
-            console.log(self.imageDict[e.originalEvent.srcElement.currentSrc]);
             self.onClick(self.imageDict[e.originalEvent.srcElement.currentSrc]);
         });
-
 
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
@@ -79,7 +77,7 @@ angular.module('LEDApp')
             }
         };
 
-        graph.addTo(mymap);
+        //graph.addTo(mymap);
 
         $scope.search = function(){
             //console.log("On Click Search");
@@ -273,24 +271,6 @@ angular.module('LEDApp')
             var w, h;
             var ctx = canvas.getContext('2d');
 
-            /*tiles.forEach(function (tile, index, arr) {
-                var coloredTile = [];
-
-                tile.forEach(function(obs, i, a){
-                    var image = obs.value.value;
-                    console.log(image);
-                    img.src = image;
-
-                    img.onload = function() {
-                        w = canvas.width = this.width;
-                        h = canvas.height = this.height;
-
-                        //canvas.parentNode.appendChild(img);
-
-                        update();
-                    }
-                });
-            });*/
             var x = tiles.length-1;
             var tile = tiles[x];
 
@@ -334,6 +314,8 @@ angular.module('LEDApp')
                     if(x > 0){
                         tile = tiles[x];
                         x--;
+                        i = tile.length-1;
+
                         coloredImage = [];
 
                         color();
@@ -349,16 +331,16 @@ angular.module('LEDApp')
                         len = data.length,
                         i = 0;
 
+                    while(coloredImage.length < idata.data.length){
+                        coloredImage.push(0);
+                    }
+
                     //console.log("Hue: ", hue);
 
                     for (; i < len; i += 4) {
 
                         var lum = data[i] / 255;
                         var col = hsl2rgb(hue, 1, lum);
-
-                        while(coloredImage.length < idata.data.length){
-                            coloredImage.push(0);
-                        }
 
                         coloredImage[i] = Math.max(coloredImage[i], col.r);
                         coloredImage[i+1] = Math.max(coloredImage[i+1], col.g);
