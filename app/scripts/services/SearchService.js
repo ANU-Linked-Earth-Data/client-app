@@ -6,25 +6,25 @@ angular.module('LEDApp')
 
         var prefixes = [
             'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>',
-            'PREFIX led: <http://www.example.org/ANU-LED#>',
+            'PREFIX led: <http://www.anulinkedearth.org/sandbox/ANU-LED#>',
             'PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>',
             'PREFIX qb:  <http://purl.org/linked-data/cube#>'
         ];
 
         var whereClauses = [
-            '?subject led:etmBand ?band .',
-            '?subject led:bounds ?geoSparql .',
-            '?subject led:time ?timePeriod .',
-            '?subject led:resolution ?resolution .',
-            '?subject led:location ?location .',
-            '?subject led:dggsLevelPixel ?dggsLevelPixel .',
-            '?subject led:dggsLevelSquare ?dggsLevelSquare .',
-            '?subject led:dggsCell ?dggsCell .',
-            '?location geo:lat ?lat .',
-            '?location geo:lon ?lon .'
+            '?subject led:etmBand ?band',
+            '; led:bounds ?geoSparql',
+            '; led:time ?timePeriod',
+            '; led:resolution ?resolution',
+            '; led:dggsLevelPixel ?dggsLevelPixel',
+            '; led:dggsLevelSquare ?dggsLevelSquare',
+            '; led:dggsCell ?dggsCell',
+            '; geo:lat ?lat',
+            '; geo:long ?lon',
+            '.'
         ];
 
-        //TODO: Only select relevent things
+        //TODO: Only select relevant things
         var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?value ?resolution ?lon ?lat ?dggsLevelSquare ?dggsLevelPixel ?dggsCell';
         var selectDistinct = 'SELECT DISTINCT ?subject ?geoSparql ?timePeriod ?band ?value ?resolution ?lon ?lat ?dggsLevelSquare ?dggsLevelPixel';
         var closing = 'ORDER BY ASC(?timePeriod)';
@@ -40,8 +40,9 @@ angular.module('LEDApp')
 
         var getDistinctBands = [
             'SELECT DISTINCT ?band WHERE {',
-            '?subject a qb:Observation .',
-            '?subject led:etmBand ?band',
+            '?subject a qb:Observation',
+            '; led:etmBand ?band',
+            '.',
             '} ORDER BY ASC(?band)'
         ].join('\n');
 
@@ -63,16 +64,12 @@ angular.module('LEDApp')
 
         SearchService.performQueryLimitLocation = function (cell, band) {
             var query = prefixes.join('\n') +
-                selectDistinct + '\n' +
+                '\n' + selectDistinct + '\n' +
                 'WHERE {\n ?subject a led:Pixel .' +
                 '?subject led:value ?value . \n' +
                 whereClauses.join('\n') + '\n' +
-                'FILTER(?dggsCell = \"' +
-                cell +
-                '\" && ?band = ' +
-                band +
-                ')}' +
-                closing;
+                '?subject led:dggsCell \"' + cell + '\n\"' +
+                '; ?band ' + band + '\n.\n}' + closing;
 
             var response = SPARQLEndpoint.query(query);
 
@@ -87,15 +84,12 @@ angular.module('LEDApp')
         SearchService.performQueryLimitTime = function(level, timePeriod){
             //Construct query:
             var query = prefixes.join('\n') +
-                select + '\n' +
+                '\n' + select + '\n' +
                 'WHERE {\n ?subject a led:GridSquare .' +
                 '?subject led:imageData ?value .  \n' +
                 whereClauses.join('\n') + '\n' +
-                'FILTER(?timePeriod = \"' +
-                timePeriod +
-                '\"^^xsd:datetime && ?dggsLevelSquare = ' +
-                level +
-                ')}' +
+                '?subject led:time \"' + timePeriod + '\"^^xsd:dateTime\n' +
+                '; led:dggsLevelSquare ' + level + '\n.\n}\n' +
                 closing;
 
             var response = SPARQLEndpoint.query(query);
@@ -105,4 +99,3 @@ angular.module('LEDApp')
 
         return SearchService;
     });
-
