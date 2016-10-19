@@ -215,48 +215,6 @@ angular.module('LEDApp')
             updateFunction(e);
         };
 
-        Caman.Filter.register("color", function (hue) {
-
-            // Our process function that will be called for each pixel.
-            // Note that we pass the name of the filter as the first argument.
-            this.process("color", function (rgba) {
-                var lum = rgba.r/255.0;
-
-                var col = hsl2rgb(hue, 1, lum);
-
-                rgba.r = col.r;
-                rgba.g = col.g;
-                rgba.b = col.b;
-
-                // Return the modified RGB values
-                return rgba;
-            });
-        });
-
-        self.loadImage = function(colouredImages){
-            console.log("Loading images");
-
-            var opacity = 1/$scope.selected_bands.length;
-
-            // Clear current overlay
-            for (i in self.currentOverlay) {
-                mymap.removeLayer(self.currentOverlay[i]);
-            }
-
-            self.currentOverlay = [];
-
-            for(var i in colouredImages){
-                var coords = getBoundingCorners(String(self.imageDict[colouredImages[i]][0].geoSparql.value));
-                var overlay = new L.imageOverlay(colouredImages[i], coords, {interactive: true, opacity: opacity});
-                //var overlay = new L.imageOverlay(observations[i].value.value, coords, {interactive: true, opacity: opacity});
-
-                self.currentOverlay.push(overlay);
-                overlay.addTo(mymap);
-            }
-
-            mymap.spin(false);
-        };
-
         self.colorizeImage = function(tiles){
             // Clear current overlay
             for (var i in self.currentOverlay) {
@@ -276,7 +234,7 @@ angular.module('LEDApp')
 
             i = tile.length-1;
 
-            var coloredImage = [];
+            var coloredImage = null;
 
             var color = function(){
                 if(i >= 0) {
@@ -316,7 +274,7 @@ angular.module('LEDApp')
                         x--;
                         i = tile.length-1;
 
-                        coloredImage = [];
+                        coloredImage = null;
 
                         color();
                     }
@@ -331,8 +289,9 @@ angular.module('LEDApp')
                         len = data.length,
                         i = 0;
 
-                    while(coloredImage.length < idata.data.length){
-                        coloredImage.push(0);
+                    if(coloredImage == null){
+                        var ImageBuffer = new ArrayBuffer(len);
+                        coloredImage = new Uint8Array(ImageBuffer);
                     }
 
                     //console.log("Hue: ", hue);
@@ -348,7 +307,7 @@ angular.module('LEDApp')
 
                         data[i] = coloredImage[i];
                         data[i + 1] = coloredImage[i+1];
-                        data[i + 2] = coloredImage[i+2]
+                        data[i + 2] = coloredImage[i+2];
                     }
 
                     //idata.data = coloredImage;
@@ -403,7 +362,7 @@ angular.module('LEDApp')
             } else {
                 $scope.show_settings_error_message = false;
                 $scope.selected_bands = $scope.selectedBands();
-                console.log("Selected bands: " + $scope.selected_bands);
+                //console.log("Selected bands: " + $scope.selected_bands);
 
                 self.refreshOverlay(cachedZoomLevel, cachedTimePeriod);
             }
