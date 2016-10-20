@@ -24,12 +24,22 @@ angular.module('LEDApp')
             '.'
         ];
 
-        //TODO: Only select relevant things
+        var boundClauses = [
+            '?subject led:latMin ?latMin',
+            '; led:longMin ?longMin',
+            '; led:latMax ?latMax',
+            '; led:longMax ?longMax . '
+        ];
+
+        var boundSelect = ' ?latMin ?longMin ?latMax ?longMax ';
+
         var select = 'SELECT ?subject ?geoSparql ?timePeriod ?band ?value ?resolution ?lon ?lat ?dggsLevelSquare ?dggsLevelPixel ?dggsCell';
         var selectDistinct = 'SELECT DISTINCT ?subject ?geoSparql ?timePeriod ?band ?value ?resolution ?lon ?lat ?dggsLevelSquare ?dggsLevelPixel';
         var closing = 'ORDER BY ASC(?timePeriod)';
 
-        //$scope.selectGeolocation = null;
+        var landsat = '; qb:dataSet <https://anulinkedearth.org/datasets/LS8_OLI_TIRS_NBAR-dataset>';
+        var modis = '; qb:dataSet <https://anulinkedearth.org/datasets/modis-dataset>';
+        var abs = '; qb:dataSet <https://anulinkedearth.org/datasets/abs-dataset>';
 
         var getDistinctTimeStamps = [
             'SELECT DISTINCT ?timePeriod WHERE {',
@@ -40,9 +50,8 @@ angular.module('LEDApp')
 
         var getDistinctBands = [
             'SELECT DISTINCT ?band WHERE {',
-            '?subject a qb:Observation',
-            '; led:etmBand ?band',
-            '.',
+            '?subject a qb:Observation .',
+            '?subject led:etmBand ?band',
             '} ORDER BY ASC(?band)'
         ].join('\n');
 
@@ -64,7 +73,7 @@ angular.module('LEDApp')
 
         SearchService.performQueryLimitLocation = function (cell, band) {
             var query = prefixes.join('\n') +
-                '\n' + selectDistinct + '\n' +
+                selectDistinct + '\n' +
                 'WHERE {\n ?subject a led:Pixel .' +
                 '?subject led:value ?value . \n' +
                 whereClauses.join('\n') + '\n' +
@@ -85,11 +94,48 @@ angular.module('LEDApp')
             //Construct query:
             var query = prefixes.join('\n') +
                 '\n' + select + '\n' +
-                'WHERE {\n ?subject a led:GridSquare .' +
+                'WHERE {\n ?subject a led:GridSquare . \n' +
                 '?subject led:imageData ?value .  \n' +
                 whereClauses.join('\n') + '\n' +
                 '?subject led:time \"' + timePeriod + '\"^^xsd:dateTime\n' +
+                landsat + ' \n' +
                 '; led:dggsLevelSquare ' + level + '\n.\n}\n' +
+                closing;
+
+            var response = SPARQLEndpoint.query(query);
+
+            return response;
+        };
+
+        SearchService.performModisQueryLimitTime = function(level, timePeriod, bounds){
+            //Construct query:
+            var query = prefixes.join('\n') +
+                '\n' + select + boundSelect + '\n' +
+                'WHERE {\n ?subject a led:GridSquare . \n' +
+                '?subject led:imageData ?value .  \n' +
+                whereClauses.join('\n') + '\n' +
+                boundClauses.join('\n') + '\n' +
+                '?subject led:time \"' + timePeriod + '\"^^xsd:dateTime\n' +
+                modis + '\n' +
+                '; led:dggsLevelSquare ' + level + '\n.\n}\n' +
+                closing;
+
+            var response = SPARQLEndpoint.query(query);
+
+            return response;
+        };
+
+        SearchService.performAbsQueryLimitTime = function(level, timePeriod){
+            //Construct query:
+            var query = prefixes.join('\n') +
+                '\n' + select + '\n' +
+                'WHERE {\n ?subject a led:GridSquare . \n' +
+                '?subject led:imageData ?value .  \n' +
+                whereClauses.join('\n') + '\n' +
+                '?subject led:time \"' + timePeriod + '\"^^xsd:dateTime\n' +
+                abs + '\n' +
+                '; led:dggsLevelSquare ' + level +
+                 '\n.\n}\n' +
                 closing;
 
             var response = SPARQLEndpoint.query(query);
@@ -99,3 +145,4 @@ angular.module('LEDApp')
 
         return SearchService;
     });
+

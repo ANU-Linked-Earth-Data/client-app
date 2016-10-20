@@ -4,8 +4,9 @@
 
 angular.module('LEDApp')
     .controller('ChartController', function($scope, SearchService){
-
         var self = this;
+
+        console.log("Loading chart controller");
 
         $scope.$on('onSelectRegion', function(event, cell, band){
             self.performQueryLimitLocation(cell, band);

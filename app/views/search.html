@@ -60,6 +60,7 @@
             <div ng-hide="clickedImage == null">
                 <a href="{{clickedImage.subject.value}}">Link</a>
                 <p>Pixel: {{clickedImage.dggsLevelPixel.value}}</p>
+                <p>Satellite: {{clickedImage.dataSet.value}}</p>
                 <p>Square: {{clickedImage.dggsLevelSquare.value}}</p>
                 <p>Resolution: {{clickedImage.resolution.value}}</p>
                 <p>Location: ({{clickedImage.lat}},{{clickedImage.lon}})</p>
@@ -71,15 +72,20 @@
 
             <p ng-show="clickedImage == null">No tile selected</p>
 
-            <div ng-hide="clickedImage == null">
-
-            </div>
+            <div id="graphPane" ng-hide="clickedImage == null"></div>
         </div>
 
         <div class="sidebar-pane" id="code">
             <h1 class="sidebar-header">Raw JSON<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
 
+            Landsat:
             <pre>{{jsonVals|json}}</pre>
+
+            MODIS:
+            <pre>{{absVals|json}}</pre>
+
+            ABS:
+            <pre>{{modisVals|json}}</pre>
         </div>
 
         <div class="sidebar-pane" id="settings">

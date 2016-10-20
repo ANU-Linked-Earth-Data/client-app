@@ -11,6 +11,10 @@ angular.module('LEDApp')
 
         var cachedImages = [];
         var cachedSubjects = [];
+        var bounds;
+
+        self.layers = L.control.layers(null);
+        self.visibleLayers = [];
 
         self.currentOverlay = [];
         self.imageDict = [];
@@ -33,13 +37,13 @@ angular.module('LEDApp')
             zoomControl: true
         }).setView([-34.6, 148.33], 9);
 
+        bounds = mymap.getBounds();
+
         mymap.zoomControl.setPosition('topright');
 
-        mymap.on('zoomend', function(){
-            self.performQueryLimitTime(mymap.getZoom()-5, cachedTimePeriod);
-        });
-
         mymap.on('moveend', function(){
+            bounds = mymap.getBounds();
+
             self.refreshOverlay(cachedZoomLevel, cachedTimePeriod);
         });
 
@@ -53,6 +57,8 @@ angular.module('LEDApp')
             id: 'duo.034p8op4',
             accessToken: 'pk.eyJ1IjoiZHVvIiwiYSI6ImNpbm52Y2lxdzB6emZ0dmx5MmNmNGZnejMifQ._yO4cALvQUPwvtVj_nUYEA'
         }).addTo(mymap);
+
+        self.layers.addTo(mymap);
 
         var sidebar = L.control.sidebar('sidebar').addTo(mymap);
 
@@ -69,13 +75,10 @@ angular.module('LEDApp')
             return div;
         };
 
-        graph.update = function(props){
-            if (props !== undefined){
-
-            } else {
-
-            }
-        };
+        var div = $("#graphPane");
+        div.load("views/charts/barchart.html");
+        var newScope = $scope.$new();
+        $compile(div.contents())(newScope);
 
         //graph.addTo(mymap);
 
@@ -137,7 +140,6 @@ angular.module('LEDApp')
 
                     },
                     onEnd: function () {
-                        //TODO: Only update if end date is different
                         if (cachedTimePeriod !== self.dict[$scope.sliderDate.value]) {
                             self.performQueryLimitTime(cachedZoomLevel, self.dict[self.display[$scope.sliderDate.value]]);
                         }
@@ -157,8 +159,6 @@ angular.module('LEDApp')
 
             //$scope.coord.lat = Number(imageDict[e.target.src].lat.value);
             //$scope.coord.lon = Number(imageDict[e.target.src].lon.value);
-
-            //$scope.$broadcast('onSelectRegion', e[0].dggsCell.value, e.band.value);
         };
 
         self.performQueryLimitTime = function(zoomLevel, timePeriod){
@@ -212,17 +212,99 @@ angular.module('LEDApp')
             $scope.clickedImage = e[0];
             $scope.clickedImage.lat = lat;
             $scope.clickedImage.lon = lon;
-            updateFunction(e);
+
+            $scope.$broadcast('onSelectRegion', $scope.clickedImage.dggsCell.value, $scope.clickedImage.band.value);
         };
 
-        self.colorizeImage = function(tiles){
-            // Clear current overlay
-            for (var i in self.currentOverlay) {
-                mymap.removeLayer(self.currentOverlay[i]);
+        self.displayLayers = function(ls, modis, abs){
+            self.visibleLayers.forEach(function(l){
+                self.layers.removeLayer(l);
+            });
+
+            if(ls != null){
+                self.layers.addBaseLayer(ls, "Landsat");
+                self.visibleLayers.push(ls);
             }
 
-            self.currentOverlay = [];
+            if(modis.length > 0){
+                self.layers.addBaseLayer(L.layerGroup(modis), "MODIS");
+                self.visibleLayers.push(modis);
+
+            }
+
+            if(abs.length > 0){
+                self.layers.addBaseLayer(L.layerGroup(abs), "ABS");
+                self.visibleLayers.push(abs);
+            }
+
+            if(self.visibleLayers.length > 0){
+                self.visibleLayers[0].addTo(mymap);
+            }
+
+            mymap.spin(false);
+        };
+
+        self.loadAbsData = function(ls, modis, zoomLevel, timePeriod){
+            SearchService.performAbsQueryLimitTime(zoomLevel, timePeriod).then(function (data) {
+                // Read new observations
+
+                var observations = data.results.bindings;
+                $scope.absVals = observations;
+                var overlays = [];
+
+
+                observations.forEach(function(obs, index, arr){
+                    console.log("Loading ABS data");
+
+                    var image = obs.value.value;
+
+                    var bound = obs.geoSparql.value;
+                    var coords = getBoundingCorners(String(bound));
+                    var overlay = new L.imageOverlay(image, coords, {interactive: true, opacity: 1});
+
+                    self.imageDict[image] = obs;
+                    self.currentOverlay.push(overlay);
+                    overlays.push(overlay);
+                });
+
+                self.displayLayers(ls, modis, overlays);
+            });
+        };
+
+        self.loadModisData = function(landsat, zoomLevel, timePeriod){
+            var ls = landsat;
+            SearchService.performModisQueryLimitTime(zoomLevel, timePeriod, bounds).then(function (data) {
+                // Read new observations
+
+                var observations = data.results.bindings;
+                $scope.modisVals = observations;
+                var overlays = [];
+
+                observations.forEach(function(obs, index, arr){
+                    var image = obs.value.value;
+
+                    var bound = obs.geoSparql.value;
+                    var coords = getBoundingCorners(String(bound));
+                    var overlay = new L.imageOverlay(image, coords, {interactive: true, opacity: 1});
+
+                    self.imageDict[image] = obs;
+                    self.currentOverlay.push(overlay);
+                    overlays.push(overlay);
+                });
+
+                self.loadAbsData(ls,overlays,zoomLevel,timePeriod);
+            });
+        };
+
+        self.colorizeImage = function(tiles, zoomLevel, timePeriod){
             self.coloredTiles = [];
+
+            if(tiles == null || tiles.length == 0){
+                console.log("No Landsat Data");
+
+                self.loadModisData(null, zoomLevel, timePeriod);
+                return;
+            }
 
             var canvas = document.getElementById("invisibleCanvas");
             var img = new Image;
@@ -232,7 +314,7 @@ angular.module('LEDApp')
             var x = tiles.length-1;
             var tile = tiles[x];
 
-            i = tile.length-1;
+            var i = tile.length-1;
 
             var coloredImage = null;
 
@@ -260,16 +342,15 @@ angular.module('LEDApp')
                 } else {
                     var png = document.getElementById('invisibleCanvas').toDataURL();
 
-                    self.imageDict[png] = tile;
-
                     var bound = tile[0].geoSparql.value;
                     var coords = getBoundingCorners(String(bound));
                     var overlay = new L.imageOverlay(png, coords, {interactive: true, opacity: 1});
 
+                    self.imageDict[png] = tile;
                     self.currentOverlay.push(overlay);
-                    overlay.addTo(mymap);
+                    self.coloredTiles.push(overlay);
 
-                    if(x > 0){
+                    if(x >= 0){
                         tile = tiles[x];
                         x--;
                         i = tile.length-1;
@@ -277,6 +358,8 @@ angular.module('LEDApp')
                         coloredImage = null;
 
                         color();
+                    } else {
+                        self.loadModisData(L.layerGroup(self.coloredTiles), zoomLevel, timePeriod);
                     }
                 }
 
@@ -317,8 +400,6 @@ angular.module('LEDApp')
             };
 
             color();
-            //return Caman("#invisibleCanvas", tiles[0][0].value.value, function(){
-
         };
 
         self.refreshOverlay = function(zoomLevel, timePeriod){
@@ -326,6 +407,7 @@ angular.module('LEDApp')
                 self.performQueryLimitTime(zoomLevel, timePeriod);
             } else {
                 mymap.spin(true);
+
                 SearchService.performQueryLimitTime(zoomLevel, timePeriod).then(function (data) {
                     // Read new observations
                     var observations = data.results.bindings;
@@ -349,8 +431,23 @@ angular.module('LEDApp')
                         }
                     }
 
-                    self.colorizeImage(tiles);
-                    mymap.spin(false);
+                    // Clear current overlay
+                    for (var i in self.currentOverlay) {
+                        mymap.removeLayer(self.currentOverlay[i]);
+                        if(self.overlayMaps != null) {
+                            if (self.overlayMaps.LandSat != null) {
+                                self.overlayMaps.LandSat.clearOverlay();
+                            }
+
+                            if(self.overlayMaps.Modis != null){
+                                self.overlayMaps.Modis.clearOverlay();
+                            }
+                        }
+                    }
+
+                    self.currentOverlay = [];
+
+                    self.colorizeImage(tiles, zoomLevel, timePeriod);
                 });
             }
         };
