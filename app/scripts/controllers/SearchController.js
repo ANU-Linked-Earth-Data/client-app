@@ -75,10 +75,10 @@ angular.module('LEDApp')
             return div;
         };
 
-        var div = $("#graphPane");
+        /*var div = $("#graphPane");
         div.load("views/charts/barchart.html");
         var newScope = $scope.$new();
-        $compile(div.contents())(newScope);
+        $compile(div.contents())(newScope);*/
 
         //graph.addTo(mymap);
 
